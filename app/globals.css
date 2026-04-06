@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-frozen-blue: #0A74DA;
+  --color-dodger-deep: #1C3E6C;
+  --color-ice-blue: #87CEEB;
+  --color-snow-white: #F8F9FA;
+  --color-frozen-glow: #4A90E2;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg, #0A74DA 0%, #1C3E6C 50%, #0A3A5C 100%);
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .frozen-gradient-bg {
+    background: linear-gradient(135deg, #0A74DA 0%, #1C3E6C 100%);
+  }
+  
+  .frozen-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,248,255,0.9) 100%);
+    box-shadow: 0 8px 20px rgba(10, 116, 218, 0.25);
+    border: 1px solid rgba(135, 206, 235, 0.3);
+    backdrop-filter: blur(10px);
+  }
+  
+  .frozen-card:hover {
+    box-shadow: 0 12px 28px rgba(10, 116, 218, 0.4);
+    transform: translateY(-4px);
+    border-color: #87CEEB;
+  }
+  
+  .frozen-button {
+    background: linear-gradient(135deg, #0A74DA 0%, #4A90E2 50%, #87CEEB 100%);
+    box-shadow: 0 4px 15px rgba(10, 116, 218, 0.4);
+    transition: all 0.3s ease;
+  }
+  
+  .frozen-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(10, 116, 218, 0.6);
+  }
+  
+  .frozen-glow {
+    text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
+  }
+  
+  .frozen-border {
+    border-image: linear-gradient(135deg, #0A74DA, #87CEEB) 1;
+  }
 }
