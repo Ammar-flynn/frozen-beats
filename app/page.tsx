@@ -1,92 +1,126 @@
 "use client";
 
 import { useState } from "react";
+import { useRef } from "react";
+import { useEffect } from "react";
+
 import { 
   Play, 
   Pause, 
   SkipForward, 
   SkipBack, 
   Heart, 
-  Share2,
   Volume2,
-  Repeat,
-  Shuffle,
   Search,
   Home as HomeIcon,
   Library,
   User,
-  Mic2,
-  Sparkles
+  X,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
+import "./global.css";
 
-// Sample music data
-const songs = [
-  {
-    id: 1,
-    title: "Frozen Heart",
-    artist: "Elsa Melody",
-    album: "Winter Tales",
-    duration: "3:45",
-    cover: "https://picsum.photos/id/104/200/200",
-    plays: "1.2M"
-  },
-  {
-    id: 2,
-    title: "Ice Castle Dreams",
-    artist: "Snow Symphony",
-    album: "Frozen Echoes",
-    duration: "4:12",
-    cover: "https://picsum.photos/id/15/200/200",
-    plays: "892K"
-  },
-  {
-    id: 3,
-    title: "Northern Lights",
-    artist: "Aurora Vibes",
-    album: "Arctic Nights",
-    duration: "3:58",
-    cover: "https://picsum.photos/id/96/200/200",
-    plays: "2.1M"
-  },
-  {
-    id: 4,
-    title: "Crystal Waters",
-    artist: "Glacier Peak",
-    album: "Melting Moments",
-    duration: "4:22",
-    cover: "https://picsum.photos/id/22/200/200",
-    plays: "654K"
-  },
-  {
-    id: 5,
-    title: "Snowflake Waltz",
-    artist: "Winter Wind",
-    album: "Dance of Snow",
-    duration: "3:30",
-    cover: "https://picsum.photos/id/30/200/200",
-    plays: "1.5M"
-  },
-  {
-    id: 6,
-    title: "Arctic Sunrise",
-    artist: "Polar Dawn",
-    album: "Morning Frost",
-    duration: "4:05",
-    cover: "https://picsum.photos/id/42/200/200",
-    plays: "987K"
-  }
+// Full music database (same as before)
+const artists = [
+  { id: 1, name: "Elsa Melody", image: "https://picsum.photos/id/104/200/200", followers: "2.5M" },
+  { id: 2, name: "Snow Symphony", image: "https://picsum.photos/id/15/200/200", followers: "1.8M" },
+  { id: 3, name: "Aurora Vibes", image: "https://picsum.photos/id/96/200/200", followers: "3.2M" },
+  { id: 4, name: "Glacier Peak", image: "https://picsum.photos/id/22/200/200", followers: "890K" },
+  { id: 5, name: "Winter Wind", image: "https://picsum.photos/id/30/200/200", followers: "1.5M" },
 ];
 
+const albums = [
+  { id: 1, name: "Winter Tales", artist: "Elsa Melody", image: "https://picsum.photos/id/104/200/200", year: "2024", songs: 12 },
+  { id: 2, name: "Frozen Echoes", artist: "Snow Symphony", image: "https://picsum.photos/id/15/200/200", year: "2023", songs: 10 },
+  { id: 3, name: "Arctic Nights", artist: "Aurora Vibes", image: "https://picsum.photos/id/96/200/200", year: "2024", songs: 14 },
+  { id: 4, name: "Melting Moments", artist: "Glacier Peak", image: "https://picsum.photos/id/22/200/200", year: "2023", songs: 8 },
+  { id: 5, name: "Dance of Snow", artist: "Winter Wind", image: "https://picsum.photos/id/30/200/200", year: "2024", songs: 11 },
+];
+
+const allSongs = [
+  { id: 1, title: "Frozen Heart", artist: "Elsa Melody", artistId: 1, album: "Winter Tales", albumId: 1, duration: "3:45", cover: "https://picsum.photos/id/104/200/200", plays: "1.2M", trending: true, audio: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3" },
+  { id: 2, title: "Ice Castle Dreams", artist: "Snow Symphony", artistId: 2, album: "Frozen Echoes", albumId: 2, duration: "4:12", cover: "https://picsum.photos/id/15/200/200", plays: "892K", trending: true, audio: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3" },
+  { id: 3, title: "Northern Lights", artist: "Aurora Vibes", artistId: 3, album: "Arctic Nights", albumId: 3, duration: "3:58", cover: "https://picsum.photos/id/96/200/200", plays: "2.1M", trending: true, audio: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3" },
+  { id: 4, title: "Espresso", artist: "Sabrina Carpenter", artistId: 4, album: "Short n' Sweet", albumId: 4, duration: "3:21", cover: "https://i.ytimg.com/vi/51zjlMhdSTE/maxresdefault.jpg", plays: "900M", trending: true, audio: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3" },
+  { id: 5, title: "Snowflake Waltz", artist: "Winter Wind", artistId: 5, album: "Dance of Snow", albumId: 5, duration: "3:30", cover: "https://picsum.photos/id/30/200/200", plays: "1.5M", trending: true, audio: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3" },
+  { id: 6, title: "Arctic Sunrise", artist: "Polar Dawn", artistId: 6, album: "Morning Frost", albumId: 6, duration: "4:05", cover: "https://picsum.photos/id/42/200/200", plays: "987K", trending: false, audio: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3" },
+  { id: 7, title: "Winter Magic", artist: "Elsa Melody", artistId: 1, album: "Winter Tales", albumId: 1, duration: "3:52", cover: "https://picsum.photos/id/20/200/200", plays: "1.8M", trending: true, audio: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3" },
+  { id: 8, title: "Snow Queen's Dance", artist: "Aurora Vibes", artistId: 3, album: "Arctic Nights", albumId: 3, duration: "4:15", cover: "https://picsum.photos/id/29/200/200", plays: "2.3M", trending: false, audio: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3" },
+];
+
+type Page = "home" | "artist" | "album" | "search";
+
 export default function Home() {
-  const [currentSong, setCurrentSong] = useState(songs[0]);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  
+  const [currentSong, setCurrentSong] = useState(allSongs[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [likedSongs, setLikedSongs] = useState<number[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState<Page>("home");
+  const [selectedArtist, setSelectedArtist] = useState<any>(null);
+  const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
+  const [sliderIndex, setSliderIndex] = useState(0);
 
-  const filteredSongs = songs.filter(song => 
-    song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    song.artist.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
+  useEffect(() => {
+  const audio = audioRef.current;
+  if (!audio) return;
+
+  const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+  const onLoaded = () => setDuration(audio.duration || 0);
+
+  audio.addEventListener("timeupdate", onTimeUpdate);
+  audio.addEventListener("loadedmetadata", onLoaded);
+
+  return () => {
+    audio.removeEventListener("timeupdate", onTimeUpdate);
+    audio.removeEventListener("loadedmetadata", onLoaded);
+  };
+}, [currentSong]);
+
+useEffect(() => {
+  const audio = audioRef.current;
+  if (!audio) return;
+
+  audio.pause();
+  audio.load();
+}, [currentSong]);
+
+useEffect(() => {
+  const audio = audioRef.current;
+  if (!audio) return;
+
+  if (isPlaying) {
+    audio.play().catch(() => {});
+  } else {
+    audio.pause();
+  }
+}, [isPlaying, currentSong]);
+
+useEffect(() => {
+  const audio = audioRef.current;
+  if (!audio) return;
+
+  const handleEnd = () => setIsPlaying(false);
+
+  audio.addEventListener("ended", handleEnd);
+  return () => audio.removeEventListener("ended", handleEnd);
+}, []);
+
+// Update volume when it changes
+useEffect(() => {
+  if (audioRef.current) {
+    audioRef.current.volume = volume;
+  }
+}, [volume]);
 
   const toggleLike = (songId: number) => {
     setLikedSongs(prev => 
@@ -96,221 +130,536 @@ export default function Home() {
     );
   };
 
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setSearchQuery(searchInput);
+      setCurrentPage("search");
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchInput("");
+    setSearchQuery("");
+    setCurrentPage("home");
+  };
+
+  const goToArtist = (artist: any) => {
+    setSelectedArtist(artist);
+    setCurrentPage("artist");
+  };
+
+  const goToAlbum = (album: any) => {
+    setSelectedAlbum(album);
+    setCurrentPage("album");
+  };
+
+  const goToHome = () => {
+    setCurrentPage("home");
+    setSelectedArtist(null);
+    setSelectedAlbum(null);
+    setSearchQuery("");
+    setSearchInput("");
+  };
+
+  const getCurrentSongs = () => {
+    if (currentPage === "artist" && selectedArtist) {
+      return allSongs.filter(song => song.artistId === selectedArtist.id);
+    }
+    if (currentPage === "album" && selectedAlbum) {
+      return allSongs.filter(song => song.albumId === selectedAlbum.id);
+    }
+    if (currentPage === "search" && searchQuery) {
+      return allSongs.filter(song => 
+        song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        song.artist.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    return [];
+  };
+
+  const formatTime = (time: number) => {
+  if (!time || isNaN(time)) return "0:00";
+
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+
+  return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  };
+
+  const currentSongs = getCurrentSongs();
+  const trendingSongs = allSongs.filter(song => song.trending);
+
+  const nextSlide = () => {
+    setSliderIndex((prev) => (prev + 1) % trendingSongs.length);
+  };
+
+  const prevSlide = () => {
+    setSliderIndex((prev) => (prev - 1 + trendingSongs.length) % trendingSongs.length);
+  };
+
   return (
-    <div className="min-h-screen">
+    
+    <div className="app-container">
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-[#0A74DA]/95 to-[#1C3E6C]/95 backdrop-blur-md border-r border-[#87CEEB]/30 shadow-2xl z-10">
-        <div className="p-6">
-          <div className="flex items-center gap-2 mb-8">
-            <div className="relative">
-              <img src="/Flake.jpg" className="w-8 h-8 text-[#87CEEB] animate-pulse" />
+      <div className="sidebar">
+        <div className="sidebar-content">
+          <div className="logo-container" onClick={goToHome}>
+            <div className="logo-icon-wrapper">
+              <img src="/Flake.jpg" alt="Frozen Beats Logo" className="logo-icon" />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-[#87CEEB] to-[#FFFFFF] bg-clip-text text-transparent frozen-glow">
-              Frozen Beats
-            </h1>
+            <h1 className="logo-text">Frozen Beats</h1>
           </div>
           
-          <nav className="space-y-4">
-            <a href="#" className="flex items-center gap-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-all">
-              <HomeIcon className="w-5 h-5" />
+          <nav className="nav">
+            <button onClick={goToHome} className="nav-button">
+              <HomeIcon className="nav-icon" />
               <span>Home</span>
-            </a>
-            <a href="#" className="flex items-center gap-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-all">
-              <Search className="w-5 h-5" />
+            </button>
+            <button className="nav-button">
+              <Search className="nav-icon" />
               <span>Search</span>
-            </a>
-            <a href="#" className="flex items-center gap-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-all">
-              <Library className="w-5 h-5" />
+            </button>
+            <button className="nav-button">
+              <Library className="nav-icon" />
               <span>Library</span>
-            </a>
-            <a href="#" className="flex items-center gap-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-all">
-              <User className="w-5 h-5" />
+            </button>
+            <button className="nav-button">
+              <User className="nav-icon" />
               <span>Profile</span>
-            </a>
+            </button>
           </nav>
 
-          <div className="mt-8 pt-8 border-t border-[#87CEEB]/30">
-            <p className="text-xs text-white/60">Your Library</p>
-            <div className="mt-4 space-y-2">
-              <div className="p-2 rounded-lg bg-white/10 text-white/90 text-sm backdrop-blur-sm">✨ Favorites</div>
-              <div className="p-2 rounded-lg hover:bg-white/10 text-white/70 hover:text-white/90 text-sm transition-all">❄️ Recently Played</div>
-              <div className="p-2 rounded-lg hover:bg-white/10 text-white/70 hover:text-white/90 text-sm transition-all">🎵 Playlists</div>
+          <div className="library-section">
+            <p className="library-title">Your Library</p>
+            <div className="library-items">
+              <div className="library-item library-item-primary">
+                ✨ Favorites ({likedSongs.length})
+              </div>
+              <div className="library-item library-item-secondary">
+                ❄️ Recently Played
+              </div>
+              <div className="library-item library-item-secondary">
+                🎵 Playlists
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="ml-64 p-8">
+      <div className="main-content">
         {/* Header with Search */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#87CEEB] w-4 h-4" />
+        <div className="header">
+          <div className="search-container">
+            <Search className="search-icon" />
             <input
               type="text"
-              placeholder="Search frozen melodies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 rounded-full border border-[#87CEEB]/30 bg-white/90 backdrop-blur-sm focus:outline-none focus:border-[#0A74DA] focus:ring-2 focus:ring-[#87CEEB]/50 w-80 text-gray-700"
+              placeholder="Search frozen melodies... (Press Enter)"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              className="search-input"
             />
+            {searchInput && (
+              <button onClick={clearSearch} className="clear-search">
+                <X className="clear-icon" />
+              </button>
+            )}
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-white/80">Welcome back</p>
-              <p className="font-semibold text-[#87CEEB] frozen-glow">❄️ Music Lover</p>
+          <div className="user-section">
+            <div className="user-greeting">
+              <p className="welcome-text">Welcome back</p>
+              <p className="user-name">❄️ Music Lover</p>
             </div>
           </div>
         </div>
 
-        {/* Hero Section */}
-        <div className="frozen-card rounded-2xl p-8 mb-8">
-          <div className="flex items-center gap-6">
-            <div className="w-32 h-32 rounded-xl overflow-hidden shadow-2xl ring-2 ring-[#87CEEB]/50">
-              <img src={currentSong.cover} alt={currentSong.title} className="w-full h-full object-cover" />
+        {/* Hero Section - Now Playing */}
+        <div className="now-playing-card frozen-card">
+          <div className="now-playing-content">
+            <div className="now-playing-image">
+              <img src={currentSong.cover} alt={currentSong.title} />
             </div>
             <div>
-              <p className="text-sm text-[#0A74DA] font-semibold mb-2">❄️ NOW PLAYING</p>
-              <h2 className="text-3xl font-bold text-[#1C3E6C] mb-2 frozen-glow">{currentSong.title}</h2>
-              <p className="text-gray-600">{currentSong.artist} • {currentSong.album}</p>
-              <div className="flex items-center gap-3 mt-4">
+              <p className="now-playing-label">❄️ NOW PLAYING</p>
+              <h2 className="now-playing-title">{currentSong.title}</h2>
+              <p className="now-playing-meta">{currentSong.artist} • {currentSong.album}</p>
+              <div className="controls">
                 <button 
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="frozen-button text-white p-3 rounded-full"
+                  className="play-button"
                 >
-                  {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+                  {isPlaying ? <Pause size={24} /> : <Play size={24} />}
                 </button>
-                <button className="p-2 rounded-full bg-white/50 hover:bg-white/80 transition-all text-[#0A74DA]">
-                  <SkipBack className="w-5 h-5" />
+                <button className="control-button">
+                  <SkipBack size={20} />
                 </button>
-                <button className="p-2 rounded-full bg-white/50 hover:bg-white/80 transition-all text-[#0A74DA]">
-                  <SkipForward className="w-5 h-5" />
+                <button className="control-button">
+                  <SkipForward size={20} />
                 </button>
-                <button className="p-2 rounded-full bg-white/50 hover:bg-white/80 transition-all text-[#0A74DA]">
-                  <Volume2 className="w-5 h-5" />
+                <button className="control-button">
+                  <Volume2 size={20} />
                 </button>
               </div>
             </div>
           </div>
         </div>
+        
 
-        {/* Song Cards Grid */}
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-white frozen-glow">❄️ Trending Tracks</h2>
-            <div className="flex gap-2">
-              <button className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all text-white">
-                <Shuffle className="w-4 h-4" />
-              </button>
-              <button className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all text-white">
-                <Repeat className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSongs.map((song) => (
-              <div
-                key={song.id}
-                className="frozen-card rounded-xl p-4 cursor-pointer transition-all duration-300"
-                onClick={() => {
-                  setCurrentSong(song);
-                  setIsPlaying(true);
-                }}
-              >
-                <div className="relative group">
-                  <img 
-                    src={song.cover} 
-                    alt={song.title}
-                    className="w-full h-48 object-cover rounded-lg mb-3"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C3E6C]/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                    <button className="frozen-button text-white p-3 rounded-full">
-                      <Play className="w-6 h-6" />
-                    </button>
+        {/* HOME PAGE */}
+        {currentPage === "home" && (
+          <>
+            {/* Trending Slider */}
+            <div className="trending-slider">
+              <div className="section-header">
+                <h2 className="section-title">🔥 Trending Now</h2>
+                <div className="slider-nav">
+                  <button onClick={prevSlide} className="slider-button">
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button onClick={nextSlide} className="slider-button">
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
+              <div className="slider-container">
+                <div className="slider-track">
+                  <div className="slider-item">
+                    <div className="trending-card frozen-card">
+                      <div className="trending-content">
+                        <img 
+                          src={trendingSongs[sliderIndex].cover} 
+                          alt={trendingSongs[sliderIndex].title}
+                          className="trending-image"
+                        />
+                        <div className="trending-info">
+                          <div className="trending-badge">
+                            <span className="trending-rank">#{sliderIndex + 1}</span>
+                            <span className="trending-label">Trending</span>
+                          </div>
+                          <h3 className="trending-title">{trendingSongs[sliderIndex].title}</h3>
+                          <p className="trending-artist">{trendingSongs[sliderIndex].artist}</p>
+                          <p className="trending-plays">{trendingSongs[sliderIndex].plays} plays</p>
+                          <button 
+                            onClick={() => {
+                              setCurrentSong(trendingSongs[sliderIndex]);
+                              setIsPlaying(true);
+                            }}
+                            className="play-button"
+                            style={{ marginTop: '16px', padding: '8px 24px' }}
+                          >
+                            <Play size={16} style={{ display: 'inline', marginRight: '8px' }} /> Play Now
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-[#1C3E6C] mb-1">{song.title}</h3>
-                    <p className="text-sm text-gray-500">{song.artist}</p>
-                    <p className="text-xs text-[#0A74DA] mt-1 font-semibold">❄️ {song.plays} plays</p>
+              </div>
+            </div>
+
+            {/* Popular Artists */}
+            <div style={{ marginBottom: '48px' }}>
+              <h2 className="section-title" style={{ marginBottom: '24px' }}>🎤 Popular Artists</h2>
+              <div className="artist-grid">
+                {artists.map((artist) => (
+                  <div
+                    key={artist.id}
+                    onClick={() => goToArtist(artist)}
+                    className="artist-card frozen-card"
+                  >
+                    <img src={artist.image} alt={artist.name} className="artist-image" />
+                    <h3 className="artist-name">{artist.name}</h3>
+                    <p className="artist-followers">{artist.followers} followers</p>
                   </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleLike(song.id);
-                      }}
-                      className="p-1 rounded-full hover:bg-white/50 transition"
-                    >
-                      <Heart 
-                        className={`w-5 h-5 ${
-                          likedSongs.includes(song.id) 
-                            ? 'fill-red-500 text-red-500' 
-                            : 'text-[#0A74DA]'
-                        }`}
+                ))}
+              </div>
+            </div>
+
+            {/* Featured Albums */}
+            <div style={{ marginBottom: '48px' }}>
+              <h2 className="section-title" style={{ marginBottom: '24px' }}>📀 Featured Albums</h2>
+              <div className="album-grid">
+                {albums.map((album) => (
+                  <div
+                    key={album.id}
+                    onClick={() => goToAlbum(album)}
+                    className="album-card frozen-card"
+                  >
+                    <img src={album.image} alt={album.name} className="album-image" />
+                    <h3 className="album-name">{album.name}</h3>
+                    <p className="album-meta">{album.artist} • {album.year}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Trending Songs Grid */}
+            <div>
+              <h2 className="section-title" style={{ marginBottom: '24px' }}>❄️ Trending Tracks</h2>
+              <div className="songs-grid">
+                {trendingSongs.map((song) => (
+                  <div
+                    key={song.id}
+                    className="song-card frozen-card"
+                    onClick={() => {
+                      setCurrentSong(song);
+                      setIsPlaying(true);
+                    }}
+                  >
+                    <div className="song-image-container">
+                      <img 
+                        src={song.cover} 
+                        alt={song.title}
+                        className="song-image"
                       />
-                    </button>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (navigator.share) {
-                          navigator.share({
-                            title: song.title,
-                            text: `Check out ${song.title} by ${song.artist}`,
-                          });
-                        }
-                      }}
-                      className="p-1 rounded-full hover:bg-white/50 transition"
-                    >
-                      <Share2 className="w-5 h-5 text-[#0A74DA]" />
+                      <div className="song-overlay">
+                        <button className="song-play-button">
+                          <Play size={24} />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="song-info">
+                      <div>
+                        <h3 className="song-title">{song.title}</h3>
+                        <p className="song-artist">{song.artist}</p>
+                        <p className="song-plays">❄️ {song.plays} plays</p>
+                      </div>
+                      <div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleLike(song.id);
+                          }}
+                          className="like-button"
+                        >
+                          <Heart 
+                            size={20}
+                            className={likedSongs.includes(song.id) ? "like-icon-liked" : "like-icon"}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ARTIST PAGE */}
+        {currentPage === "artist" && selectedArtist && (
+          <div>
+            <button onClick={goToHome} className="back-button">
+              <ChevronLeft size={20} /> Back to Home
+            </button>
+            
+            <div className="artist-header frozen-card">
+              <div className="artist-header-content">
+                <img src={selectedArtist.image} alt={selectedArtist.name} className="artist-avatar" />
+                <div>
+                  <p className="artist-type">🎤 ARTIST</p>
+                  <h2 className="artist-name-large">{selectedArtist.name}</h2>
+                  <p className="artist-stats">{selectedArtist.followers} monthly listeners</p>
+                </div>
+              </div>
+            </div>
+
+            <h2 className="section-title" style={{ marginBottom: '24px' }}>🎵 Popular Songs</h2>
+            <div className="songs-grid">
+              {currentSongs.map((song) => (
+                <div
+                  key={song.id}
+                  className="song-card frozen-card"
+                  onClick={() => {
+                    setCurrentSong(song);
+                    setIsPlaying(true);
+                  }}
+                >
+                  <div className="song-image-container">
+                    <img src={song.cover} alt={song.title} className="song-image" />
+                    <div className="song-overlay">
+                      <button className="song-play-button">
+                        <Play size={24} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="song-info">
+                    <div>
+                      <h3 className="song-title">{song.title}</h3>
+                      <p className="song-artist">{song.album}</p>
+                    </div>
+                    <button onClick={(e) => { e.stopPropagation(); toggleLike(song.id); }} className="like-button">
+                      <Heart size={20} className={likedSongs.includes(song.id) ? "like-icon-liked" : "like-icon"} />
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Now Playing Bar */}
-        <div className="fixed bottom-0 left-64 right-0 bg-gradient-to-r from-[#0A74DA]/95 to-[#1C3E6C]/95 backdrop-blur-md border-t border-[#87CEEB]/30 p-4 shadow-2xl z-10">
-          <div className="flex items-center justify-between max-w-6xl mx-auto">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded overflow-hidden ring-2 ring-[#87CEEB]/50">
-                <img src={currentSong.cover} alt={currentSong.title} className="w-full h-full object-cover" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm text-white">{currentSong.title}</p>
-                <p className="text-xs text-white/70">{currentSong.artist}</p>
+        {/* ALBUM PAGE */}
+        {currentPage === "album" && selectedAlbum && (
+          <div>
+            <button onClick={goToHome} className="back-button">
+              <ChevronLeft size={20} /> Back to Home
+            </button>
+            
+            <div className="album-header frozen-card">
+              <div className="album-header-content">
+                <img src={selectedAlbum.image} alt={selectedAlbum.name} className="album-cover" />
+                <div>
+                  <p className="album-type">📀 ALBUM</p>
+                  <h2 className="album-name-large">{selectedAlbum.name}</h2>
+                  <p className="album-details">{selectedAlbum.artist} • {selectedAlbum.year} • {selectedAlbum.songs} songs</p>
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <button className="p-1 rounded-full hover:bg-white/10 transition-all text-white">
-                <SkipBack className="w-5 h-5" />
-              </button>
-              <button 
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="frozen-button text-white p-2 rounded-full"
-              >
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-              </button>
-              <button className="p-1 rounded-full hover:bg-white/10 transition-all text-white">
-                <SkipForward className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Volume2 className="w-4 h-4 text-white" />
-              <div className="w-24 h-1 bg-white/30 rounded-full">
-                <div className="w-2/3 h-full bg-gradient-to-r from-[#87CEEB] to-[#FFFFFF] rounded-full"></div>
-              </div>
-              <span className="text-xs text-white/70">2:34 / 3:45</span>
+
+            <h2 className="section-title" style={{ marginBottom: '24px' }}>🎵 Tracklist</h2>
+            <div className="tracklist">
+              {currentSongs.map((song, index) => (
+                <div
+                  key={song.id}
+                  className="track-item frozen-card"
+                  onClick={() => {
+                    setCurrentSong(song);
+                    setIsPlaying(true);
+                  }}
+                >
+                  <div className="track-left">
+                    <span className="track-number">#{index + 1}</span>
+                    <div>
+                      <h3 className="track-title">{song.title}</h3>
+                      <p className="track-duration">{song.duration}</p>
+                    </div>
+                  </div>
+                  <div className="track-actions">
+                    <button onClick={(e) => { e.stopPropagation(); toggleLike(song.id); }} className="like-button">
+                      <Heart size={20} className={likedSongs.includes(song.id) ? "like-icon-liked" : "like-icon"} />
+                    </button>
+                    <Play size={20} style={{ color: '#0A74DA' }} />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        )}
+
+        {/* SEARCH PAGE */}
+        {currentPage === "search" && (
+          <div>
+            <h2 className="search-results">
+              {currentSongs.length === 0 ? `No results for "${searchQuery}"` : `Search results for "${searchQuery}" (${currentSongs.length} songs)`}
+            </h2>
+            {currentSongs.length === 0 ? (
+              <div className="empty-state">
+                <p className="empty-message">No songs found matching "{searchQuery}"</p>
+                <p className="empty-hint">Try searching for "Frozen", "Ice", or "Snow"</p>
+              </div>
+            ) : (
+              <div className="songs-grid">
+                {currentSongs.map((song) => (
+                  <div
+                    key={song.id}
+                    className="song-card frozen-card"
+                    onClick={() => {
+                      setCurrentSong(song);
+                      setIsPlaying(true);
+                    }}
+                  >
+                    <div className="song-image-container">
+                      <img src={song.cover} alt={song.title} className="song-image" />
+                      <div className="song-overlay">
+                        <button className="song-play-button">
+                          <Play size={24} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="song-info">
+                      <div>
+                        <h3 className="song-title">{song.title}</h3>
+                        <p className="song-artist">{song.artist}</p>
+                        <p className="song-plays">❄️ {song.plays} plays</p>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); toggleLike(song.id); }} className="like-button">
+                        <Heart size={20} className={likedSongs.includes(song.id) ? "like-icon-liked" : "like-icon"} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+       {/* Now Playing Bar */}
+<div className="now-playing-bar">
+  <div className="bar-content">
+    <div className="bar-song-info">
+      <div className="bar-song-image">
+        <img src={currentSong.cover} alt={currentSong.title} />
+      </div>
+      <div>
+        <p className="bar-song-title">{currentSong.title}</p>
+        <p className="bar-song-artist">{currentSong.artist}</p>
       </div>
     </div>
+    
+    <div className="bar-controls">
+      <button className="bar-control-button">
+        <SkipBack size={20} />
+      </button>
+      <button 
+        onClick={() => setIsPlaying(!isPlaying)}
+        className="bar-play-button"
+      >
+        {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+      </button>
+      <button className="bar-control-button">
+        <SkipForward size={20} />
+      </button>
+    </div>
+    
+    <div className="bar-volume">
+      <Volume2 size={16} style={{ color: 'white' }} />
+      <div 
+        className="volume-slider-container"
+        onClick={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const percent = (e.clientX - rect.left) / rect.width;
+          setVolume(Math.max(0, Math.min(1, percent)));
+        }}
+      >
+        <div className="volume-progress" style={{ width: `${volume * 100}%` }} />
+      </div>
+    </div>
+  </div>
+  
+  <div className="progress-wrapper">
+    <div 
+      className="progress-slider"
+      onClick={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        if (audioRef.current && duration) {
+          const newTime = percent * duration;
+          audioRef.current.currentTime = newTime;
+          setCurrentTime(newTime);
+        }
+      }}
+    >
+      <div className="progress-progress" style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }} />
+    </div>
+    <span className="bar-time">{formatTime(currentTime)} / {formatTime(duration)}</span>
+  </div>
+</div>
+
+<audio ref={audioRef} src={currentSong.audio} />
+</div>
+</div>
+    
   );
 }
