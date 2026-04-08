@@ -17,7 +17,11 @@ import {
   User,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ListMusic,
+  Plus,
+  Trash2,
+  Music
 } from "lucide-react";
 import "./global.css";
 
@@ -52,7 +56,6 @@ const allSongs = [
 type Page = "home" | "artist" | "album" | "search";
 
 export default function Home() {
-
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [currentTime, setCurrentTime] = useState(0);
@@ -68,59 +71,63 @@ export default function Home() {
   const [selectedArtist, setSelectedArtist] = useState<any>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
   const [sliderIndex, setSliderIndex] = useState(0);
+  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
+  const [playlistSongs, setPlaylistSongs] = useState<any[]>([]);
+  const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
 
+  // Auto-play next song when current song ends
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      playNextSong();
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => audio.removeEventListener("ended", handleEnded);
+  }, [playlistSongs, currentQueueIndex]);
 
   useEffect(() => {
-  const audio = audioRef.current;
-  if (!audio) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-  const onTimeUpdate = () => setCurrentTime(audio.currentTime);
-  const onLoaded = () => setDuration(audio.duration || 0);
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onLoaded = () => setDuration(audio.duration || 0);
 
-  audio.addEventListener("timeupdate", onTimeUpdate);
-  audio.addEventListener("loadedmetadata", onLoaded);
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoaded);
 
-  return () => {
-    audio.removeEventListener("timeupdate", onTimeUpdate);
-    audio.removeEventListener("loadedmetadata", onLoaded);
-  };
-}, [currentSong]);
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoaded);
+    };
+  }, [currentSong]);
 
-useEffect(() => {
-  const audio = audioRef.current;
-  if (!audio) return;
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
-  audio.pause();
-  audio.load();
-}, [currentSong]);
-
-useEffect(() => {
-  const audio = audioRef.current;
-  if (!audio) return;
-
-  if (isPlaying) {
-    audio.play().catch(() => {});
-  } else {
     audio.pause();
-  }
-}, [isPlaying, currentSong]);
+    audio.load();
+  }, [currentSong]);
 
-useEffect(() => {
-  const audio = audioRef.current;
-  if (!audio) return;
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
-  const handleEnd = () => setIsPlaying(false);
+    if (isPlaying) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying, currentSong]);
 
-  audio.addEventListener("ended", handleEnd);
-  return () => audio.removeEventListener("ended", handleEnd);
-}, []);
-
-// Update volume when it changes
-useEffect(() => {
-  if (audioRef.current) {
-    audioRef.current.volume = volume;
-  }
-}, [volume]);
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
 
   const toggleLike = (songId: number) => {
     setLikedSongs(prev => 
@@ -178,12 +185,12 @@ useEffect(() => {
   };
 
   const formatTime = (time: number) => {
-  if (!time || isNaN(time)) return "0:00";
+    if (!time || isNaN(time)) return "0:00";
 
-  const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60);
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
 
-  return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
   const currentSongs = getCurrentSongs();
@@ -197,8 +204,76 @@ useEffect(() => {
     setSliderIndex((prev) => (prev - 1 + trendingSongs.length) % trendingSongs.length);
   };
 
-  return (
+  // Playlist queue functions
+  const addToPlaylist = (song: any) => {
+    if (!playlistSongs.find(s => s.id === song.id)) {
+      setPlaylistSongs([...playlistSongs, song]);
+    }
+  };
+
+  const removeFromPlaylist = (songId: number) => {
+    const newPlaylist = playlistSongs.filter(song => song.id !== songId);
+    setPlaylistSongs(newPlaylist);
     
+    // Adjust current queue index if needed
+    if (currentQueueIndex >= newPlaylist.length) {
+      setCurrentQueueIndex(Math.max(0, newPlaylist.length - 1));
+    }
+  };
+
+  const playSongFromPlaylist = (index: number) => {
+    if (playlistSongs[index]) {
+      setCurrentSong(playlistSongs[index]);
+      setCurrentQueueIndex(index);
+      setIsPlaying(true);
+    }
+  };
+
+  const playNextSong = () => {
+    if (playlistSongs.length > 0 && currentQueueIndex + 1 < playlistSongs.length) {
+      const nextIndex = currentQueueIndex + 1;
+      setCurrentSong(playlistSongs[nextIndex]);
+      setCurrentQueueIndex(nextIndex);
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(false);
+    }
+  };
+
+  const playPreviousSong = () => {
+    if (playlistSongs.length > 0 && currentQueueIndex - 1 >= 0) {
+      const prevIndex = currentQueueIndex - 1;
+      setCurrentSong(playlistSongs[prevIndex]);
+      setCurrentQueueIndex(prevIndex);
+      setIsPlaying(true);
+    }
+  };
+
+  const clearPlaylist = () => {
+    setPlaylistSongs([]);
+    setCurrentQueueIndex(0);
+    setIsPlaying(false);
+  };
+
+  const playSongWithQueue = (song: any) => {
+    // Check if song is already in playlist
+    const existingIndex = playlistSongs.findIndex(s => s.id === song.id);
+    
+    if (existingIndex !== -1) {
+      // If song exists, play it from its position
+      playSongFromPlaylist(existingIndex);
+    } else {
+      // If not, add to playlist and play it
+      const newPlaylist = [...playlistSongs, song];
+      setPlaylistSongs(newPlaylist);
+      const newIndex = newPlaylist.length - 1;
+      setCurrentSong(song);
+      setCurrentQueueIndex(newIndex);
+      setIsPlaying(true);
+    }
+  };
+
+  return (
     <div className="app-container">
       {/* Sidebar */}
       <div className="sidebar">
@@ -243,11 +318,20 @@ useEffect(() => {
               </div>
             </div>
           </div>
+
+          {/* Playlist Button */}
+          <button 
+            onClick={() => setIsPlaylistOpen(true)}
+            className="playlist-toggle-button"
+          >
+            <ListMusic size={20} />
+            <span>Queue ({playlistSongs.length})</span>
+          </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="main-content">
+      <div className={`main-content ${isPlaylistOpen ? 'with-playlist' : ''}`}>
         {/* Header with Search */}
         <div className="header">
           <div className="search-container">
@@ -286,26 +370,38 @@ useEffect(() => {
               <p className="now-playing-meta">{currentSong.artist} • {currentSong.album}</p>
               <div className="controls">
                 <button 
+                  onClick={playPreviousSong}
+                  className="control-button"
+                  disabled={playlistSongs.length === 0 || currentQueueIndex === 0}
+                >
+                  <SkipBack size={20} />
+                </button>
+                <button 
                   onClick={() => setIsPlaying(!isPlaying)}
                   className="play-button"
                 >
                   {isPlaying ? <Pause size={24} /> : <Play size={24} />}
                 </button>
-                <button className="control-button">
-                  <SkipBack size={20} />
-                </button>
-                <button className="control-button">
+                <button 
+                  onClick={playNextSong}
+                  className="control-button"
+                  disabled={playlistSongs.length === 0 || currentQueueIndex === playlistSongs.length - 1}
+                >
                   <SkipForward size={20} />
                 </button>
                 <button className="control-button">
                   <Volume2 size={20} />
                 </button>
               </div>
+              {playlistSongs.length > 0 && (
+                <p className="queue-info">
+                  Queue: {currentQueueIndex + 1} of {playlistSongs.length}
+                </p>
+              )}
             </div>
           </div>
         </div>
         
-
         {/* HOME PAGE */}
         {currentPage === "home" && (
           <>
@@ -342,13 +438,12 @@ useEffect(() => {
                           <p className="trending-plays">{trendingSongs[sliderIndex].plays} plays</p>
                           <button 
                             onClick={() => {
-                              setCurrentSong(trendingSongs[sliderIndex]);
-                              setIsPlaying(true);
+                              playSongWithQueue(trendingSongs[sliderIndex]);
                             }}
                             className="play-button"
                             style={{ marginTop: '16px', padding: '8px 24px' }}
                           >
-                            <Play size={16} style={{ display: 'inline', marginRight: '8px' }} /> Play Now
+                            <Play size={16} style={{ display: 'inline', marginRight: '8px' }} /> Add to Queue & Play
                           </button>
                         </div>
                       </div>
@@ -403,8 +498,7 @@ useEffect(() => {
                     key={song.id}
                     className="song-card frozen-card"
                     onClick={() => {
-                      setCurrentSong(song);
-                      setIsPlaying(true);
+                      playSongWithQueue(song);
                     }}
                   >
                     <div className="song-image-container">
@@ -426,7 +520,7 @@ useEffect(() => {
                         <p className="song-artist">{song.artist}</p>
                         <p className="song-plays">❄️ {song.plays} plays</p>
                       </div>
-                      <div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -438,6 +532,16 @@ useEffect(() => {
                             size={20}
                             className={likedSongs.includes(song.id) ? "like-icon-liked" : "like-icon"}
                           />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToPlaylist(song);
+                          }}
+                          className="add-to-playlist-button"
+                          title="Add to queue"
+                        >
+                          <Plus size={20} />
                         </button>
                       </div>
                     </div>
@@ -473,8 +577,7 @@ useEffect(() => {
                   key={song.id}
                   className="song-card frozen-card"
                   onClick={() => {
-                    setCurrentSong(song);
-                    setIsPlaying(true);
+                    playSongWithQueue(song);
                   }}
                 >
                   <div className="song-image-container">
@@ -490,9 +593,20 @@ useEffect(() => {
                       <h3 className="song-title">{song.title}</h3>
                       <p className="song-artist">{song.album}</p>
                     </div>
-                    <button onClick={(e) => { e.stopPropagation(); toggleLike(song.id); }} className="like-button">
-                      <Heart size={20} className={likedSongs.includes(song.id) ? "like-icon-liked" : "like-icon"} />
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={(e) => { e.stopPropagation(); toggleLike(song.id); }} className="like-button">
+                        <Heart size={20} className={likedSongs.includes(song.id) ? "like-icon-liked" : "like-icon"} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToPlaylist(song);
+                        }}
+                        className="add-to-playlist-button"
+                      >
+                        <Plus size={20} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -525,8 +639,7 @@ useEffect(() => {
                   key={song.id}
                   className="track-item frozen-card"
                   onClick={() => {
-                    setCurrentSong(song);
-                    setIsPlaying(true);
+                    playSongWithQueue(song);
                   }}
                 >
                   <div className="track-left">
@@ -539,6 +652,15 @@ useEffect(() => {
                   <div className="track-actions">
                     <button onClick={(e) => { e.stopPropagation(); toggleLike(song.id); }} className="like-button">
                       <Heart size={20} className={likedSongs.includes(song.id) ? "like-icon-liked" : "like-icon"} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToPlaylist(song);
+                      }}
+                      className="add-to-playlist-button"
+                    >
+                      <Plus size={20} />
                     </button>
                     <Play size={20} style={{ color: '#0A74DA' }} />
                   </div>
@@ -566,8 +688,7 @@ useEffect(() => {
                     key={song.id}
                     className="song-card frozen-card"
                     onClick={() => {
-                      setCurrentSong(song);
-                      setIsPlaying(true);
+                      playSongWithQueue(song);
                     }}
                   >
                     <div className="song-image-container">
@@ -584,9 +705,20 @@ useEffect(() => {
                         <p className="song-artist">{song.artist}</p>
                         <p className="song-plays">❄️ {song.plays} plays</p>
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); toggleLike(song.id); }} className="like-button">
-                        <Heart size={20} className={likedSongs.includes(song.id) ? "like-icon-liked" : "like-icon"} />
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={(e) => { e.stopPropagation(); toggleLike(song.id); }} className="like-button">
+                          <Heart size={20} className={likedSongs.includes(song.id) ? "like-icon-liked" : "like-icon"} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToPlaylist(song);
+                          }}
+                          className="add-to-playlist-button"
+                        >
+                          <Plus size={20} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -595,71 +727,132 @@ useEffect(() => {
           </div>
         )}
 
-       {/* Now Playing Bar */}
-<div className="now-playing-bar">
-  <div className="bar-content">
-    <div className="bar-song-info">
-      <div className="bar-song-image">
-        <img src={currentSong.cover} alt={currentSong.title} />
-      </div>
-      <div>
-        <p className="bar-song-title">{currentSong.title}</p>
-        <p className="bar-song-artist">{currentSong.artist}</p>
-      </div>
-    </div>
-    
-    <div className="bar-controls">
-      <button className="bar-control-button">
-        <SkipBack size={20} />
-      </button>
-      <button 
-        onClick={() => setIsPlaying(!isPlaying)}
-        className="bar-play-button"
-      >
-        {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-      </button>
-      <button className="bar-control-button">
-        <SkipForward size={20} />
-      </button>
-    </div>
-    
-    <div className="bar-volume">
-      <Volume2 size={16} style={{ color: 'white' }} />
-      <div 
-        className="volume-slider-container"
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const percent = (e.clientX - rect.left) / rect.width;
-          setVolume(Math.max(0, Math.min(1, percent)));
-        }}
-      >
-        <div className="volume-progress" style={{ width: `${volume * 100}%` }} />
-      </div>
-    </div>
-  </div>
-  
-  <div className="progress-wrapper">
-    <div 
-      className="progress-slider"
-      onClick={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        if (audioRef.current && duration) {
-          const newTime = percent * duration;
-          audioRef.current.currentTime = newTime;
-          setCurrentTime(newTime);
-        }
-      }}
-    >
-      <div className="progress-progress" style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }} />
-    </div>
-    <span className="bar-time">{formatTime(currentTime)} / {formatTime(duration)}</span>
-  </div>
-</div>
+        {/* Now Playing Bar */}
+        <div className="now-playing-bar">
+          <div className="bar-content">
+            <div className="bar-song-info">
+              <div className="bar-song-image">
+                <img src={currentSong.cover} alt={currentSong.title} />
+              </div>
+              <div>
+                <p className="bar-song-title">{currentSong.title}</p>
+                <p className="bar-song-artist">{currentSong.artist}</p>
+              </div>
+            </div>
+            
+            <div className="bar-controls">
+              <button onClick={playPreviousSong} className="bar-control-button" disabled={playlistSongs.length === 0 || currentQueueIndex === 0}>
+                <SkipBack size={20} />
+              </button>
+              <button 
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="bar-play-button"
+              >
+                {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+              </button>
+              <button onClick={playNextSong} className="bar-control-button" disabled={playlistSongs.length === 0 || currentQueueIndex === playlistSongs.length - 1}>
+                <SkipForward size={20} />
+              </button>
+            </div>
+            
+            <div className="bar-volume">
+              <Volume2 size={16} style={{ color: 'white' }} />
+              <div 
+                className="volume-slider-container"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const percent = (e.clientX - rect.left) / rect.width;
+                  setVolume(Math.max(0, Math.min(1, percent)));
+                }}
+              >
+                <div className="volume-progress" style={{ width: `${volume * 100}%` }} />
+              </div>
+            </div>
+          </div>
+          
+          <div className="progress-wrapper">
+            <div 
+              className="progress-slider"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                if (audioRef.current && duration) {
+                  const newTime = percent * duration;
+                  audioRef.current.currentTime = newTime;
+                  setCurrentTime(newTime);
+                }
+              }}
+            >
+              <div className="progress-progress" style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }} />
+            </div>
+            <span className="bar-time">{formatTime(currentTime)} / {formatTime(duration)}</span>
+          </div>
+        </div>
 
-<audio ref={audioRef} src={currentSong.audio} />
-</div>
-</div>
-    
+        <audio ref={audioRef} src={currentSong.audio} />
+      </div>
+
+      {/* Playlist Slider */}
+      {isPlaylistOpen && (
+        <div className="playlist-slider-overlay" onClick={() => setIsPlaylistOpen(false)}>
+          <div className="playlist-slider" onClick={(e) => e.stopPropagation()}>
+            <div className="playlist-header">
+              <h2 className="playlist-title">
+                <Music size={20} style={{ marginRight: '8px' }} />
+                Queue ({playlistSongs.length})
+              </h2>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {playlistSongs.length > 0 && (
+                  <button onClick={clearPlaylist} className="clear-playlist-button" title="Clear queue">
+                    <Trash2 size={20} />
+                  </button>
+                )}
+                <button onClick={() => setIsPlaylistOpen(false)} className="close-playlist">
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="playlist-content">
+              {playlistSongs.length === 0 ? (
+                <div className="empty-playlist">
+                  <ListMusic size={48} />
+                  <p>Your queue is empty</p>
+                  <p className="empty-playlist-hint">Click the <Plus size={16} /> icon or tap any song to add to queue!</p>
+                </div>
+              ) : (
+                <div className="playlist-songs">
+                  {playlistSongs.map((song, index) => (
+                    <div
+                      key={song.id}
+                      className={`playlist-song-item ${index === currentQueueIndex && currentSong.id === song.id ? 'active' : ''}`}
+                      onClick={() => playSongFromPlaylist(index)}
+                    >
+                      <div className="playlist-song-number">{index + 1}</div>
+                      <img src={song.cover} alt={song.title} className="playlist-song-image" />
+                      <div className="playlist-song-info">
+                        <h4 className="playlist-song-title">{song.title}</h4>
+                        <p className="playlist-song-artist">{song.artist}</p>
+                      </div>
+                      <div className="playlist-song-duration">{song.duration}</div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFromPlaylist(song.id);
+                        }}
+                        className="remove-from-playlist"
+                        title="Remove from queue"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
