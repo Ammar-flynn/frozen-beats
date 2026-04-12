@@ -145,6 +145,7 @@ body {
 .main-content {
   margin-left: 256px;
   padding: 32px;
+  padding-bottom: 150px;
 }
 
 /* Header styles */
