@@ -25,23 +25,37 @@ export function TrendingSlider({ trendingSongs, sliderIndex, onPrevSlide, onNext
           </button>
         </div>
       </div>
+      
       <div className="slider-container">
-        <div className="trending-card frozen-card">
-          <div className="trending-content">
-            <img src={trendingSongs[sliderIndex]?.coverUrl} alt={trendingSongs[sliderIndex]?.title} className="trending-image" />
-            <div className="trending-info">
-              <div className="trending-badge">
-                <span className="trending-rank">#{sliderIndex + 1}</span>
-                <span className="trending-label">Trending</span>
+        <div 
+          className="slider-track" 
+          style={{ transform: `translateX(-${sliderIndex * 100}%)` }}
+        >
+          {trendingSongs.map((song, index) => (
+             <div key={index} className="slider-item">
+              <div className="trending-card frozen-card">
+                <div className="trending-content">
+                  <img src={song.coverUrl} alt={song.title} className="trending-image" />
+                  <div className="trending-info">
+                    <div className="trending-badge">
+                      <span className="trending-rank">#{index + 1}</span>
+                      <span className="trending-label">Trending</span>
+                    </div>
+                    <h3 className="trending-title">{song.title}</h3>
+                    <p className="trending-artist">{song.artist}</p>
+                    <p className="trending-plays">{song.plays.toLocaleString()} plays</p>
+                    <button 
+                      onClick={() => onPlay(song)} 
+                      className="play-button" 
+                      style={{ marginTop: '16px', padding: '8px 24px' }}
+                    >
+                      <Play size={16} style={{ display: 'inline', marginRight: '8px' }} /> Play Now
+                    </button>
+                  </div>
+                </div>
               </div>
-              <h3 className="trending-title">{trendingSongs[sliderIndex]?.title}</h3>
-              <p className="trending-artist">{trendingSongs[sliderIndex]?.artist}</p>
-              <p className="trending-plays">{trendingSongs[sliderIndex]?.plays.toLocaleString()} plays</p>
-              <button onClick={() => onPlay(trendingSongs[sliderIndex])} className="play-button" style={{ marginTop: '16px', padding: '8px 24px' }}>
-                <Play size={16} style={{ display: 'inline', marginRight: '8px' }} /> Play Now
-              </button>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>

@@ -24,7 +24,7 @@ export default function Home() {
   // ========== STATE ==========
   const [songs, setSongs] = useState<Song[]>([]);
   const [artists, setArtists] = useState<Artist[]>([
-    { id: "default-1", name: "Sabrina Carpenter", image: "https://i.ytimg.com/vi/51zjlMhdSTE/maxresdefault.jpg", followers: "222.5M" },
+    { id: "default-1", name: "Sabrina Carpenter", image: "https://images.genius.com/8e8e92eda3d816065a4272a56b6f5ef6.1000x1000x1.png", followers: "222.5M" },
     { id: "default-2", name: "Elsa Melody", image: "https://picsum.photos/id/104/200/200", followers: "2.5M" }
   ]);
   const [albums, setAlbums] = useState<Album[]>([
@@ -35,11 +35,11 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<Page>("home");
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [sliderIndex, setSliderIndex] = useState(0);
-  const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // ========== HOOKS ==========
@@ -63,6 +63,7 @@ export default function Home() {
     playPrevious,
     clearQueue,
     playSongWithQueue,
+    reorderQueue,
   } = useAudioPlayer();
 
   const {
@@ -115,6 +116,10 @@ export default function Home() {
       plays: 50000
     }
   ];
+
+
+const handleCloseQueue = () => setIsQueueOpen(false);
+const handleOpenQueue = () => setIsQueueOpen(true);
 
   // ========== HELPER FUNCTIONS ==========
   const extractArtistsFromSongs = (apiSongs: Song[]) => {
@@ -238,6 +243,7 @@ export default function Home() {
     }
   };
 
+
   // LOGOUT HANDLER - Clears everything
   const handleLogoutClick = () => {
     // Clear audio
@@ -245,6 +251,8 @@ export default function Home() {
       audioRef.current.pause();
       audioRef.current.src = "";
     }
+
+   
     
     // Clear player state
     clearQueue();
@@ -363,11 +371,11 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
         isLoggedIn={isLoggedIn}
         onLogout={handleLogoutClick}
         queueLength={queue.length}
-        onOpenQueue={() => setIsQueueOpen(true)}
+         onOpenQueue={handleOpenQueue}
         favoritesCount={favorites.length}
       />
 
-      <div className={`main-content ${sidebarCollapsed ? 'collapsed' : ''} ${isQueueOpen ? 'with-queue' : ''}`}>
+      <div className={`main-content ${sidebarCollapsed ? 'collapsed' : ''} ${(isQueueOpen) ? 'with-queue' : ''}`}>
         <Header
           searchInput={searchInput}
           onSearchInputChange={setSearchInput}
@@ -522,30 +530,33 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
       </div>
 
       <NowPlayingBar
-        currentSong={currentSong}
-        isPlaying={isPlaying}
-        onPlayPause={() => setIsPlaying(!isPlaying)}
-        onNext={playNext}
-        onPrevious={playPrevious}
-        volume={volume}
-        onVolumeChange={setVolume}
-        currentTime={currentTime}
-        duration={duration}
-        formatTime={formatTime}
-        audioRef={audioRef}
-      />
+      currentSong={currentSong}
+      isPlaying={isPlaying}
+      onPlayPause={() => setIsPlaying(!isPlaying)}
+      onNext={playNext}
+      onPrevious={playPrevious}
+      volume={volume}
+      onVolumeChange={setVolume}
+      currentTime={currentTime}
+      duration={duration}
+      formatTime={formatTime}
+      audioRef={audioRef}
+      sidebarCollapsed={sidebarCollapsed}
+      isQueueOpen={isQueueOpen}
+    />
 
       <audio ref={audioRef} />
 
       <QueueModal
         isOpen={isQueueOpen}
-        onClose={() => setIsQueueOpen(false)}
+        onClose={handleCloseQueue}
         queue={queue}
         currentSong={currentSong}
         currentQueueIndex={currentQueueIndex}
         onPlaySong={playSong}
         onRemoveFromQueue={removeFromQueue}
         onClearQueue={clearQueue}
+        onReorderQueue={reorderQueue}
       />
     </div>
   );

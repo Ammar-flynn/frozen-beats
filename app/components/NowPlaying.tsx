@@ -13,7 +13,10 @@ interface NowPlayingBarProps {
   currentTime: number;
   duration: number;
   formatTime: (time: number) => string;
-  audioRef: RefObject<HTMLAudioElement | null>;  // Change this to allow null
+  audioRef: RefObject<HTMLAudioElement | null>;
+  sidebarCollapsed: boolean;
+  isQueueOpen?: boolean; // ADD THIS
+  isPlaylistOpen?: boolean; // ADD THIS (if you have playlist)
 }
 
 export function NowPlayingBar({ 
@@ -27,7 +30,10 @@ export function NowPlayingBar({
   currentTime, 
   duration, 
   formatTime,
-  audioRef
+  audioRef,
+  sidebarCollapsed,
+  isQueueOpen = false, // ADD THIS
+  isPlaylistOpen = false // ADD THIS (if you have playlist)
 }: NowPlayingBarProps) {
   if (!currentSong) return null;
 
@@ -45,8 +51,16 @@ export function NowPlayingBar({
     }
   };
 
+  // Generate class names dynamically
+  const barClasses = [
+    'now-playing-bar',
+    sidebarCollapsed ? 'collapsed' : '',
+    isQueueOpen ? 'with-queue' : '',
+    isPlaylistOpen ? 'with-playlist' : ''
+  ].filter(Boolean).join(' ');
+
   return (
-    <div className="now-playing-bar">
+    <div className={barClasses}>
       <div className="bar-content">
         <div className="bar-song-info">
           <div className="bar-song-image">

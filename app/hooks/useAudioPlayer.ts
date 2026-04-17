@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { arrayMove } from "@dnd-kit/sortable";
 import { Song } from "../types";
 
 export function useAudioPlayer() {
@@ -62,6 +63,20 @@ export function useAudioPlayer() {
       setIsPlaying(true);
     }
   };
+
+  const reorderQueue = (startIndex: number, endIndex: number) => {
+  const newQueue = arrayMove(queue, startIndex, endIndex);
+  setQueue(newQueue);
+  
+  // Update currentQueueIndex if the moved item affects it
+  if (currentQueueIndex === startIndex) {
+    setCurrentQueueIndex(endIndex);
+  } else if (currentQueueIndex > startIndex && currentQueueIndex <= endIndex) {
+    setCurrentQueueIndex(currentQueueIndex - 1);
+  } else if (currentQueueIndex < startIndex && currentQueueIndex >= endIndex) {
+    setCurrentQueueIndex(currentQueueIndex + 1);
+  }
+};
 
   const playPrevious = () => {
     if (isLoading) return;
@@ -224,5 +239,6 @@ export function useAudioPlayer() {
     playPrevious,
     clearQueue,
     playSongWithQueue,
+    reorderQueue,
   };
 }
