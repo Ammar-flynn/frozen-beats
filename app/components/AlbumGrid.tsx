@@ -1,4 +1,4 @@
-import { Album } from "@/types";
+import { Album } from "../types";
 
 interface AlbumGridProps {
   albums: Album[];
