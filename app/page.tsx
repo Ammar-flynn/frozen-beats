@@ -318,7 +318,8 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
     if (!searchQuery) return [];
     return songs.filter(song => 
       song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      song.artist.toLowerCase().includes(searchQuery.toLowerCase())
+      song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      song.album.toLowerCase().includes(searchQuery.toLowerCase())
     );
   };
 
@@ -436,9 +437,9 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
               setCurrentPage("album");
             }} />
             <div>
-              <h2 className="section-title" style={{ marginBottom: '24px' }}>❄️ All Tracks</h2>
+              <h2 className="section-title" style={{ marginBottom: '24px' }}>❄️ Popular Tracks</h2>
               <SongGrid
-                songs={songs.slice(0, 6)}
+                songs={[...songs].sort((a, b) => b.plays - a.plays).slice(0, 6)}
                 favorites={favorites}
                 onPlay={handlePlaySong}
                 onToggleFavorite={handleToggleFavorite}
