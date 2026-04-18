@@ -22,6 +22,14 @@ export function useAuth() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Reset Password
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetPasswordOtp, setResetPasswordOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+
   // Register with OTP
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,6 +249,88 @@ const handleVerifyOtp = async (e: React.FormEvent) => {
     }
   }, []);
 
+
+  const handleForgotPassword = () => {
+  setShowForgotPassword(true);
+  setAuthError("");
+};
+
+const handleSendResetOtp = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setAuthError("");
+  
+  try {
+    const res = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: forgotPasswordEmail })
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok) {
+      setShowResetPassword(true);
+      setShowForgotPassword(false);
+      setAuthError("✓ OTP sent to your email!");
+    } else {
+      setAuthError(data.error || "Failed to send OTP");
+    }
+  } catch (err) {
+    setAuthError("Network error. Please try again.");
+  }
+};
+
+const handleResetPassword = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setAuthError("");
+  setIsResettingPassword(true);
+  
+  if (newPassword.length < 6) {
+    setAuthError("Password must be at least 6 characters");
+    setIsResettingPassword(false);
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: forgotPasswordEmail,
+        otp: resetPasswordOtp,
+        newPassword: newPassword
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok) {
+      setShowForgotPassword(false);
+      setShowResetPassword(false);
+      setForgotPasswordEmail("");
+      setResetPasswordOtp("");
+      setNewPassword("");
+      setAuthError("✓ Password reset successful! Please login with your new password.");
+      setAuthMode("login");
+    } else {
+      setAuthError(data.error || "Failed to reset password");
+    }
+  } catch (err) {
+    setAuthError("Network error. Please try again.");
+  } finally {
+    setIsResettingPassword(false);
+  }
+};
+
+const handleBackToLogin = () => {
+  setShowForgotPassword(false);
+  setShowResetPassword(false);
+  setForgotPasswordEmail("");
+  setResetPasswordOtp("");
+  setNewPassword("");
+  setAuthError("");
+};
+
   return {
     isLoggedIn,
     user,
@@ -268,5 +358,20 @@ const handleVerifyOtp = async (e: React.FormEvent) => {
     handleVerifyOtp,
     handleResendOtp,
     handleLogout,
+    showForgotPassword,
+    setShowForgotPassword,
+    forgotPasswordEmail,
+    setForgotPasswordEmail,
+    showResetPassword,
+    setShowResetPassword,
+    resetPasswordOtp,
+    setResetPasswordOtp,
+    newPassword,
+    setNewPassword,
+    isResettingPassword,
+    handleForgotPassword,
+    handleSendResetOtp,
+    handleResetPassword,
+    handleBackToLogin,
   };
 }

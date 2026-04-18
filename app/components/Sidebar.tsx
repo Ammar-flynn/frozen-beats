@@ -1,4 +1,4 @@
-import { HomeIcon, Search, Heart, LogIn, LogOut, Menu, ListMusic } from "lucide-react";
+import { HomeIcon, Search, Heart, LogIn, LogOut, Menu, ListMusic, Key } from "lucide-react";
 import { Page } from "../types";
 
 interface SidebarProps {
@@ -8,6 +8,7 @@ interface SidebarProps {
   onPageChange: (page: Page) => void;
   isLoggedIn: boolean;
   onLogout: () => void;
+  onOpenChangePassword: () => void; 
   queueLength: number;
   onOpenQueue: () => void;
   favoritesCount: number;
@@ -20,10 +21,19 @@ export function Sidebar({
   onPageChange, 
   isLoggedIn, 
   onLogout, 
+  onOpenChangePassword, 
   queueLength, 
   onOpenQueue,
   favoritesCount
 }: SidebarProps) {
+  
+  const handleChangePassword = () => {
+    console.log("🔐 Change Password button clicked");
+    console.log("isLoggedIn:", isLoggedIn);
+    console.log("collapsed:", collapsed);
+    onOpenChangePassword();
+  };
+
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-content">
@@ -67,6 +77,17 @@ export function Sidebar({
           <ListMusic size={20} />
           {!collapsed && <span>Queue ({queueLength})</span>}
         </button>
+
+        {/* Change Password Button */}
+        {isLoggedIn && !collapsed && (
+          <button 
+            onClick={handleChangePassword}
+            className="auth-button change-password-btn"
+          >
+            <Key size={20} />
+            <span>Change Password</span>
+          </button>
+        )}
 
         {!collapsed && (
           <>

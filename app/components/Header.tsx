@@ -20,7 +20,6 @@ export function Header({
   return (
     <div className="header">
       <div className="search-container">
-        <Search className="search-icon" />
         <input
           type="text"
           placeholder="Search on Frozen Beats... (Press Enter)"

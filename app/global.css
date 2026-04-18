@@ -111,8 +111,8 @@ body {
 }
 
 .library-section {
-  margin-top: 32px;
-  padding-top: 32px;
+  margin-top: 10px;
+  padding-top: 20px;
   border-top: 1px solid rgba(135, 206, 235, 0.3);
 }
 
@@ -175,15 +175,6 @@ body {
   position: relative;
 }
 
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  color: #87CEEB;
-}
 
 .search-input {
   padding-left: 40px;
@@ -192,6 +183,10 @@ body {
   padding-bottom: 8px;
   border-radius: 9999px;
   background-color: rgba(255, 255, 255, 0.9);
+  background-image: url(/search.png);
+  background-position: 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
   backdrop-filter: blur(4px);
   border: 1px solid rgba(135, 206, 235, 0.3);
   width: 320px;
@@ -1701,6 +1696,38 @@ audio {
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Auth Form Fade Transitions */
+.auth-form-container {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.auth-form-container.exit {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.auth-form-container.enter {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.auth-form-container input,
+.auth-form-container button {
+  transition: all 0.2s ease;
+}
+
+/* Loading animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .queue-toggle-button {
   display: flex;
   align-items: center;
@@ -1725,6 +1752,170 @@ audio {
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Modal styles for Change Password*/
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  color: #f1f5f9;
+  border: 1px solid rgba(135, 206, 235, 0.3);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideIn 0.2s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  transform: rotate(90deg);
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.password-input-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding: 12px;
+  padding-right: 40px;
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  border: 1px solid #475569;
+  border-radius: 8px;
+  color: #f1f5f9;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.password-input-wrapper input:focus {
+  outline: none;
+  border-color: #0A74DA;
+  box-shadow: 0 0 0 3px rgba(10, 116, 218, 0.1);
+}
+
+.password-input-wrapper input::placeholder {
+  color: #64748b;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+  color: #0A74DA;
+}
+
+.auth-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.change-password-button {
+  background: linear-gradient(135deg, #0A74DA 0%, #4A90E2 50%, #87CEEB 100%);
+  box-shadow: 0 4px 15px rgba(10, 116, 218, 0.4);
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  padding: 10px 24px; 
+  border-radius: 9999px;
+  color: white;
+  width: auto;  
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  margin: 8px auto 0 auto;
+  min-width: 160px;  
+}
+
+.change-password-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(10, 116, 218, 0.6);
+}
+
+.change-password-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Responsive */

@@ -19,6 +19,7 @@ import { useAudioPlayer } from "./hooks/useAudioPlayer";
 import { useAuth } from "./hooks/useAuth";
 import { useFavorites } from "./hooks/useFavorites";
 import { Page, Song, Artist, Album } from "./types";
+import { ChangePasswordModal } from "./components/ChangePasswordModal";
 
 export default function Home() {
   // ========== STATE ==========
@@ -41,6 +42,8 @@ export default function Home() {
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [sliderIndex, setSliderIndex] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+
 
   // ========== HOOKS ==========
   const {
@@ -91,6 +94,21 @@ export default function Home() {
   handleVerifyOtp,     
   handleResendOtp,     
   handleLogout,
+  showForgotPassword,
+  setShowForgotPassword,
+  forgotPasswordEmail,
+  setForgotPasswordEmail,
+  showResetPassword,
+  setShowResetPassword,
+  resetPasswordOtp,
+  setResetPasswordOtp,
+  newPassword,
+  setNewPassword,
+  isResettingPassword,
+  handleForgotPassword,
+  handleSendResetOtp,
+  handleResetPassword,
+  handleBackToLogin,
 } = useAuth();
 
   const { favorites, setFavorites, fetchFavorites, toggleFavorite, resetFavorites } = useFavorites(songs, isLoggedIn, user);
@@ -118,10 +136,11 @@ export default function Home() {
   ];
 
 
+  // ========== HELPER FUNCTIONS ==========
+
 const handleCloseQueue = () => setIsQueueOpen(false);
 const handleOpenQueue = () => setIsQueueOpen(true);
 
-  // ========== HELPER FUNCTIONS ==========
   const extractArtistsFromSongs = (apiSongs: Song[]) => {
     const artistMap = new Map();
     apiSongs.forEach(song => {
@@ -136,6 +155,7 @@ const handleOpenQueue = () => setIsQueueOpen(true);
     });
     return Array.from(artistMap.values());
   };
+
 
   const extractAlbumsFromSongs = (apiSongs: Song[]) => {
     const albumMap = new Map();
@@ -251,8 +271,6 @@ const handleOpenQueue = () => setIsQueueOpen(true);
       audioRef.current.pause();
       audioRef.current.src = "";
     }
-
-   
     
     // Clear player state
     clearQueue();
@@ -300,6 +318,7 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
   }
 };
 
+
   // LOGIN HANDLER - Resets and loads user data
   const handleLoginClick = async (e: React.FormEvent) => {
     const success = await handleLogin(e);
@@ -319,6 +338,7 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
       
     }
   };
+
 
   // ========== DERIVED DATA ==========
   const trendingSongs = [...songs].sort((a, b) => b.plays - a.plays).slice(0, 10);
@@ -358,22 +378,23 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
   return (
     <div className="app-container">
       <Sidebar
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        currentPage={currentPage}
-        onPageChange={(page) => {
-          setCurrentPage(page);
-          if (page === "home") {
-            setSelectedArtist(null);
-            setSelectedAlbum(null);
-          }
-        }}
-        isLoggedIn={isLoggedIn}
-        onLogout={handleLogoutClick}
-        queueLength={queue.length}
-         onOpenQueue={handleOpenQueue}
-        favoritesCount={favorites.length}
-      />
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          currentPage={currentPage}
+          onPageChange={(page) => {
+            setCurrentPage(page);
+            if (page === "home") {
+              setSelectedArtist(null);
+              setSelectedAlbum(null);
+            }
+          }}
+          isLoggedIn={isLoggedIn}
+          onLogout={handleLogoutClick}
+          onOpenChangePassword={() => setIsChangePasswordOpen(true)}  // ADD THIS
+          queueLength={queue.length}
+          onOpenQueue={handleOpenQueue}
+          favoritesCount={favorites.length}
+        />
 
       <div className={`main-content ${sidebarCollapsed ? 'collapsed' : ''} ${(isQueueOpen) ? 'with-queue' : ''}`}>
         <Header
@@ -391,10 +412,10 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
           username={user?.username}
         />
 
-        {error && (
+        {(error || authError) && (
           <div className="error-banner">
             <AlertCircle size={20} />
-            <span>{error}</span>
+            <span>{error || authError}</span>
           </div>
         )}
 
@@ -502,31 +523,44 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
 
 
     {currentPage === "login" && !isLoggedIn && (
-        <AuthModal
-          mode={authMode}
-          onModeChange={setAuthMode}
-          loginEmail={loginEmail}
-          setLoginEmail={setLoginEmail}
-          loginPassword={loginPassword}
-          setLoginPassword={setLoginPassword}
-          registerUsername={registerUsername}
-          setRegisterUsername={setRegisterUsername}
-          registerEmail={registerEmail}
-          setRegisterEmail={setRegisterEmail}
-          registerPassword={registerPassword}
-          setRegisterPassword={setRegisterPassword}
-          otp={otp}
-          setOtp={setOtp}
-          showOtpInput={showOtpInput}
-          error={authError}
-          isLoading={isLoading}
-          onLogin={handleLoginClick}
-          onRegister={handleRegister}
-          onVerifyOtp={handleVerifyOtpAndRedirect}  // ← Use this instead
-          onResendOtp={handleResendOtp}
-          onGuestContinue={() => setCurrentPage("home")}
-        />
-      )}
+  <AuthModal
+    mode={authMode}
+    onModeChange={setAuthMode}
+    loginEmail={loginEmail}
+    setLoginEmail={setLoginEmail}
+    loginPassword={loginPassword}
+    setLoginPassword={setLoginPassword}
+    registerUsername={registerUsername}
+    setRegisterUsername={setRegisterUsername}
+    registerEmail={registerEmail}
+    setRegisterEmail={setRegisterEmail}
+    registerPassword={registerPassword}
+    setRegisterPassword={setRegisterPassword}
+    otp={otp}
+    setOtp={setOtp}
+    showOtpInput={showOtpInput}
+    error={authError}
+    isLoading={isLoading}
+    onLogin={handleLoginClick}
+    onRegister={handleRegister}
+    onVerifyOtp={handleVerifyOtpAndRedirect}
+    onResendOtp={handleResendOtp}
+    onGuestContinue={() => setCurrentPage("home")}
+    onForgotPassword={handleForgotPassword}
+    showForgotPassword={showForgotPassword}
+    forgotPasswordEmail={forgotPasswordEmail}
+    setForgotPasswordEmail={setForgotPasswordEmail}
+    onSendResetOtp={handleSendResetOtp}
+    onBackToLogin={handleBackToLogin}
+    showResetPassword={showResetPassword}
+    resetPasswordOtp={resetPasswordOtp}
+    setResetPasswordOtp={setResetPasswordOtp}
+    newPassword={newPassword}
+    setNewPassword={setNewPassword}
+    onResetPassword={handleResetPassword}
+    isResettingPassword={isResettingPassword}
+  />
+)}
       </div>
 
       <NowPlayingBar
@@ -558,6 +592,14 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
         onClearQueue={clearQueue}
         onReorderQueue={reorderQueue}
       />
+
+      <ChangePasswordModal
+      isOpen={isChangePasswordOpen}
+      onClose={() => setIsChangePasswordOpen(false)}
+      userId={user?.userId}
+      token={typeof window !== 'undefined' ? localStorage.getItem('token') : null}
+      />
+
     </div>
   );
 }
