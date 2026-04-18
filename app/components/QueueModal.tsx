@@ -6,6 +6,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,  
   useSensor,
   useSensors,
   DragEndEvent,
@@ -118,19 +119,24 @@ export function QueueModal({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      
       activationConstraint: {
         distance: 5,
       },
     }),
+    useSensor(TouchSensor, {
+    activationConstraint: {
+    delay: 100, 
+    tolerance: 5,
+  },
+}),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
   const handleClose = () => {
-  onClose();
-};
+    onClose();
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;

@@ -447,7 +447,13 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
               <div>
                 <p className="now-playing-label">❄️ NOW PLAYING</p>
                 <h2 className="now-playing-title">{currentSong.title}</h2>
-                <p className="now-playing-meta">{currentSong.artist} • {currentSong.album}</p>
+                <div className="now-playing-container">
+                    <div className="scroll-track">
+                      <p className="now-playing-meta">
+                        {currentSong.artist} • {currentSong.album}
+                      </p>
+                    </div>
+                  </div>
                 <div className="controls">
                   <button onClick={playPrevious} className="control-button">
                     <SkipBack size={20} />
