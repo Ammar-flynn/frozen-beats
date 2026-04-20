@@ -1199,13 +1199,24 @@ body {
   background-color: rgba(255, 255, 255, 0.3);
   cursor: pointer;
   position: relative;
+  transition: height 0.1s ease;
+}
+
+.volume-slider-container:hover {
+  height: 8px;
+}
+
+.volume-slider-container.dragging {
+  height: 8px;
+  cursor: grabbing;
 }
 
 .volume-progress {
   height: 100%;
   border-radius: 9999px;
   background: linear-gradient(to right, #87CEEB, #FFFFFF);
-  transition: width 0.1s linear;
+  transition: width 0.05s linear;
+  position: relative; 
 }
 
 .progress-wrapper {
@@ -1218,26 +1229,73 @@ body {
 }
 
 .progress-slider {
-  flex: 1;
+  cursor: pointer;
+  position: relative;
   height: 5px;
   background: rgba(255, 255, 255, 0.3);
   border-radius: 999px;
-  cursor: pointer;
-  position: relative;
-  margin-top: 1px;
+  transition: height 0.1s ease;
+  flex: 1;
+}
+
+.progress-slider:hover {
+  height: 8px;
+}
+
+.progress-slider.dragging {
+  height: 8px;
+  cursor: grabbing;
 }
 
 .progress-progress {
   height: 100%;
   background: linear-gradient(to right, #87CEEB, #FFFFFF);
   border-radius: 999px;
-  transition: width 0.1s linear;
+  position: relative;
+  transition: width 0.05s linear;
 }
 
 .bar-time {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
   min-width: 80px;
+}
+
+.progress-slider.dragging .progress-progress,
+.volume-slider-container.dragging .volume-progress {
+  background: linear-gradient(to right, #87CEEB, #FFFFFF);
+  box-shadow: 0 0 8px rgba(135, 206, 235, 0.8);
+}
+
+.progress-slider:hover .progress-progress::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.volume-slider-container:hover .volume-progress::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.progress-slider.dragging:hover .progress-progress::after,
+.volume-slider-container.dragging:hover .volume-progress::after {
+  display: none;
 }
 
 /* Queue Modal */
@@ -2274,11 +2332,12 @@ button:disabled {
   }
   
   .volume-slider-container {
-    width: 70px;
+    width: 80px;
+    min-width: 50px; 
   }
 
   .progress-wrapper {
-    margin-top: 8px;
+    margin-top: 4px;
   }
 
   .bar-time {
@@ -2521,6 +2580,7 @@ button:disabled {
 
   /* Now Playing Bar */
   .now-playing-bar {
+    padding: 10px 12px;
     left: 0 !important;
   }
 
@@ -2549,7 +2609,7 @@ button:disabled {
   }
 
   .volume-slider-container {
-    width: 60px;
+    width: 100px;
   }
 
   /* Artist Page */
@@ -2654,19 +2714,36 @@ button:disabled {
 
 /* Mobile styles */
 @media (max-width: 768px) {
-  /* Show hamburger button */
+
+  .progress-slider,
+  .volume-slider-container {
+    min-height: 6px; 
+    margin: -8px 0;
+  }
+  
+  .progress-slider:hover,
+  .volume-slider-container:hover {
+    height: 6px;
+  }
+  
+  .progress-slider.dragging,
+  .volume-slider-container.dragging {
+    height: 8px;
+  }
+
+
   .mobile-menu-button {
     display: flex;
   }
 
-  /* Hide sidebar by default */
+ 
   .sidebar {
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 1000;
   }
 
-  /* Show sidebar when checkbox is checked */
+
   .mobile-menu-toggle:checked ~ .sidebar {
     transform: translateX(0);
   }
@@ -2696,8 +2773,7 @@ button:disabled {
   .nav-button,
   .auth-button,
   .queue-toggle-button,
-  .control-button,
-  .bar-control-button {
+  .control-button {
     min-height: 44px;
   }
 
@@ -2857,7 +2933,6 @@ button:disabled {
     height: 120px;
   }
   
-  /* 2 lines text */
   .now-playing-container {
     width: 100%;
     overflow: hidden;
@@ -2902,15 +2977,69 @@ button:disabled {
 
   .bar-volume {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center; 
 }
 
   .volume-slider-container{
-    width: 50px;
+    width: 100px;
   }
   
   .volume-icon{
     align-items: center;
   }
 }
+
+@media (max-width: 420px) {
+
+  .bar-controls{
+    gap: 0x;
+  }
+
+  .bar-volume {
+    max-width: 50px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .volume-slider-container {
+    min-width:5px !important;
+    width: 1px !important;
+    height: 50px !important;
+    border-radius: 9999px !important;
+  }
+  
+  .volume-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    background: linear-gradient(to top, #87CEEB, #FFFFFF) !important;
+    border-radius: 9999px !important;
+    transition: height 0.05s linear !important;
+  }
+  
+  .volume-slider-container:hover .volume-progress::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .volume-slider-container:hover .volume-progress::after {
+    display: block;
+  }
+
+  .bar-content{
+    margin: 0px;
+  }
+
+}
+
