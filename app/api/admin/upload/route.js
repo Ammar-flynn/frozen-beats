@@ -27,15 +27,17 @@ export async function POST(req) {
         const formData = await req.formData();
 
         const title = formData.get("title");
-        const artist = formData.get("artist");
+        const artistString = formData.get("artist");
         const album = formData.get("album");
         const audioFile = formData.get("audio");
         const coverFile = formData.get("cover");
-        const artistCoverFile = formData.get("artistCover");
 
         if (!audioFile || !coverFile) {
             return Response.json({ error: "Audio and cover files are required" }, { status: 400 });
         }
+
+        // Split artists by comma and trim whitespace
+        const artistsList = artistString.split(',').map(a => a.trim());
 
         const uploadToCloudinary = async (file, folder) => {
             const buffer = Buffer.from(await file.arrayBuffer());
@@ -50,17 +52,13 @@ export async function POST(req) {
             });
         };
 
-        // Helper function to delete image from Cloudinary
         const deleteFromCloudinary = async (imageUrl) => {
             if (!imageUrl) return;
             try {
-                // Extract public ID from URL
-                // URL format: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/image.jpg
                 const parts = imageUrl.split('/');
                 const filename = parts.pop();
                 const folder = parts.pop();
                 const publicId = `${folder}/${filename.split('.')[0]}`;
-                
                 await cloudinary.uploader.destroy(publicId);
                 console.log(`🗑️ Deleted: ${publicId}`);
                 return true;
@@ -71,75 +69,91 @@ export async function POST(req) {
         };
 
         const audioUpload = await uploadToCloudinary(audioFile, "songs");
-        const coverUpload = await uploadToCloudinary(coverFile, "covers");
         
-        // Upload artist cover if provided
-        let artistCoverUrl = coverUpload.secure_url; // fallback to song cover
-        if (artistCoverFile && artistCoverFile.size > 0) {
-            const artistCoverUpload = await uploadToCloudinary(artistCoverFile, "artists");
-            artistCoverUrl = artistCoverUpload.secure_url;
-        }
-
         await client.connect();
         const db = client.db("FrozenBeats");
         const songs = db.collection("songs");
         const artists = db.collection("artists");
 
-        // ========== AUTO-CREATE OR UPDATE ARTIST WITH DELETION ==========
-        const existingArtist = await artists.findOne({ name: artist });
+        // ========== CHECK IF ALBUM ALREADY EXISTS ==========
+        const existingAlbumSong = await songs.findOne({ album: album });
         
-        let artistCreated = false;
-        let imageUpdated = false;
+        let albumCoverUrl = null;
+        let isNewAlbum = false;
         
-        if (!existingArtist) {
-            // Create new artist
-            const newArtist = {
-                name: artist,
-                imageUrl: artistCoverUrl,
-                bio: "",
-                socialLinks: {},
-                songCount: 1,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
-            
-            await artists.insertOne(newArtist);
-            artistCreated = true;
-            console.log(`✅ Auto-created artist: ${artist}`);
-            
+        if (existingAlbumSong && existingAlbumSong.albumCoverUrl) {
+            // Album exists - reuse existing cover (NO upload)
+            albumCoverUrl = existingAlbumSong.albumCoverUrl;
+            console.log(`📀 Using existing album cover for "${album}"`);
         } else {
-            // Artist exists - update
-            const updateData = {
-                $inc: { songCount: 1 },
-                $set: { updatedAt: new Date() }
-            };
+            // New album - upload the cover image
+            const coverUpload = await uploadToCloudinary(coverFile, "covers");
+            albumCoverUrl = coverUpload.secure_url;
+            isNewAlbum = true;
+            console.log(`🆕 New album cover uploaded for "${album}"`);
+        }
+
+        // ========== PROCESS ARTISTS ==========
+        const createdArtists = [];
+        const updatedArtists = [];
+        
+        for (const artistName of artistsList) {
+            // Check if artist cover was provided in the form
+            const artistCoverFile = formData.get(`artistCover_${artistName}`);
+            let artistCoverUrl = null;
             
-            // If new artist cover uploaded, delete old and update
             if (artistCoverFile && artistCoverFile.size > 0) {
-                // Delete old image from Cloudinary
-                if (existingArtist.imageUrl) {
-                    await deleteFromCloudinary(existingArtist.imageUrl);
-                }
-                
-                updateData.$set.imageUrl = artistCoverUrl;
-                imageUpdated = true;
-                console.log(`🖼️ Updated artist image for: ${artist}`);
+                const artistCoverUpload = await uploadToCloudinary(artistCoverFile, "artists");
+                artistCoverUrl = artistCoverUpload.secure_url;
             }
             
-            await artists.updateOne({ name: artist }, updateData);
+            const existingArtist = await artists.findOne({ name: artistName });
             
-            if (!imageUpdated) {
-                console.log(`📈 Updated song count for artist: ${artist}`);
+            if (!existingArtist) {
+                // Create new artist
+                const newArtist = {
+                    name: artistName,
+                    imageUrl: artistCoverUrl || albumCoverUrl,
+                    bio: "",
+                    socialLinks: {},
+                    songCount: 1,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                await artists.insertOne(newArtist);
+                createdArtists.push(artistName);
+                console.log(`✅ Auto-created artist: ${artistName}`);
+            } else {
+                // Artist exists - update
+                const updateData = {
+                    $inc: { songCount: 1 },
+                    $set: { updatedAt: new Date() }
+                };
+                
+                // If new artist cover uploaded, delete old and update
+                if (artistCoverFile && artistCoverFile.size > 0) {
+                    if (existingArtist.imageUrl) {
+                        await deleteFromCloudinary(existingArtist.imageUrl);
+                    }
+                    updateData.$set.imageUrl = artistCoverUrl;
+                    console.log(`🖼️ Updated artist image for: ${artistName}`);
+                }
+                
+                await artists.updateOne({ name: artistName }, updateData);
+                updatedArtists.push(artistName);
+                console.log(`📈 Updated song count for artist: ${artistName}`);
             }
         }
 
-        // Insert the song
+        // Insert the song with BOTH albumCoverUrl AND coverUrl
         const result = await songs.insertOne({
             title,
-            artist,
+            artist: artistString,
+            artists: artistsList,
             album,
+            albumCoverUrl,
+            coverUrl: albumCoverUrl,  
             audioUrl: audioUpload.secure_url,
-            coverUrl: coverUpload.secure_url,
             plays: 0,
             createdAt: new Date()
         });
@@ -147,11 +161,11 @@ export async function POST(req) {
         return Response.json({ 
             success: true, 
             message: "Song uploaded successfully",
-            artist: {
-                name: artist,
-                created: artistCreated,
-                imageUpdated: imageUpdated,
-                imageUrl: artistCoverUrl
+            isNewAlbum,
+            artists: {
+                created: createdArtists,
+                updated: updatedArtists,
+                all: artistsList
             }
         });
         

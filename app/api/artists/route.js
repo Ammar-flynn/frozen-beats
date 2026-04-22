@@ -24,18 +24,29 @@ export async function GET() {
             return Math.floor(Math.random() * 1000000).toLocaleString();
         };
         
-        // FIRST: Add artists from songs that DON'T exist in custom artists
+        // FIRST: Extract artists from songs (handle multiple artists)
         const songOnlyArtists = [];
         const processedArtists = new Set();
         
         allSongs.forEach(song => {
-            if (!customArtistNames.has(song.artist) && !processedArtists.has(song.artist)) {
-                processedArtists.add(song.artist);
-                songOnlyArtists.push({
-                    id: `song-${song.artist.toLowerCase().replace(/\s/g, '-')}`,
-                    name: song.artist,
-                    image: song.coverUrl,
-                    followers: getRandomFollowers()
+            // Get artists array or fallback to split the string
+            let artistNames = song.artists;
+            if (!artistNames && song.artist) {
+                // Split comma-separated string and trim
+                artistNames = song.artist.split(',').map(a => a.trim());
+            }
+            
+            if (artistNames && Array.isArray(artistNames)) {
+                artistNames.forEach(artistName => {
+                    if (!customArtistNames.has(artistName) && !processedArtists.has(artistName)) {
+                        processedArtists.add(artistName);
+                        songOnlyArtists.push({
+                            id: `song-${artistName.toLowerCase().replace(/\s/g, '-')}`,
+                            name: artistName,
+                            image: song.coverUrl,
+                            followers: getRandomFollowers()
+                        });
+                    }
                 });
             }
         });

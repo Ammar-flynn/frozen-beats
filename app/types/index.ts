@@ -5,11 +5,12 @@ export interface Song {
   _id: string;
   title: string;
   artist: string;
+  artists?: string[];
   album: string;
-  coverUrl: string;
+  albumCoverUrl: string;
+  coverUrl?: string;    
   audioUrl: string;
   plays: number;
-  duration?: string;
 }
 
 export interface Artist {

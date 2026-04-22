@@ -234,6 +234,31 @@ body {
   text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
 }
 
+.upload-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0A74DA 0%, #4A90E2 100%);
+  border: none;
+  border-radius: 9999px;
+  padding: 8px 16px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.upload-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4);
+}
+
+.upload-button span {
+  margin-left: 4px;
+}
+
+
 /* Card styles */
 .frozen-card {
   background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(235,250,255,0.95) 25%, rgba(170,225,255,0.85) 60%, rgba(120,200,255,0.9) 100%);
@@ -3262,5 +3287,16 @@ button:disabled {
     margin: 0px;
   }
 
+}
+
+/* Upload Button*/
+@media (max-width: 480px) {
+  .upload-button span {
+    display: none;
+  }
+  
+  .upload-button {
+    padding: 8px;
+  }
 }
 

@@ -26,7 +26,6 @@ export default function Home() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [artists, setArtists] = useState<Artist[]>([
     { id: "default-1", name: "Sabrina Carpenter", image: "https://images.genius.com/8e8e92eda3d816065a4272a56b6f5ef6.1000x1000x1.png", followers: "222.5M" },
-    { id: "default-2", name: "Elsa Melody", image: "https://picsum.photos/id/104/200/200", followers: "2.5M" }
   ]);
   const [albums, setAlbums] = useState<Album[]>([
     { id: "default-1", name: "Short N' Sweet", artist: "Sabrina Carpenter", image: "https://i.scdn.co/image/ab67616d0000b273fd8d7a8d96871e791cb1f626", year: "2024", songs: 12 }
@@ -110,29 +109,23 @@ export default function Home() {
   handleBackToLogin,
 } = useAuth();
 
+  const isAdmin = user?.role === 'admin';
   const { favorites, setFavorites, fetchFavorites, toggleFavorite, resetFavorites } = useFavorites(songs, isLoggedIn, user);
 
   // ========== HARDCODED DATA ==========
-  const hardcodedSongs: Song[] = [
-    {
-      _id: "hardcoded_1",
-      title: "Espresso",
-      artist: "Sabrina Carpenter",
-      album: "Short N' Sweet",
-      coverUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3SuAvXxSHfSqDe0jS5hZexnC7-ovu3SudDw&s",
-      audioUrl: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3",
-      plays: 125678
-    },
-    {
-      _id: "hardcoded_2",
-      title: "Frozen Heart",
-      artist: "Elsa Melody",
-      album: "Frozen Echoes",
-      coverUrl: "https://picsum.photos/id/104/200/200",
-      audioUrl: "",
-      plays: 50000
-    }
-  ];
+const hardcodedSongs: Song[] = [
+  {
+    _id: "hardcoded_1",
+    title: "Espresso",
+    artist: "Sabrina Carpenter",
+    artists: ["Sabrina Carpenter"],
+    album: "Short N' Sweet",
+    coverUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3SuAvXxSHfSqDe0jS5hZexnC7-ovu3SudDw&s",
+    albumCoverUrl: "",
+    audioUrl: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3",
+    plays: 125678
+  },
+];
 
 
   // ========== HELPER FUNCTIONS ==========
@@ -141,42 +134,50 @@ const handleCloseQueue = () => setIsQueueOpen(false);
 const handleOpenQueue = () => setIsQueueOpen(true);
 
   const extractArtistsFromSongs = (apiSongs: Song[]) => {
-    const artistMap = new Map();
-    apiSongs.forEach(song => {
-      if (!artistMap.has(song.artist)) {
-        artistMap.set(song.artist, {
-          id: `api-${song.artist.toLowerCase().replace(/\s/g, '-')}`,
-          name: song.artist,
+  const artistMap = new Map();
+  apiSongs.forEach(song => {
+
+    const artistsList = song.artists || [song.artist];
+    
+    artistsList.forEach(artistName => {
+      if (!artistMap.has(artistName)) {
+        artistMap.set(artistName, {
+          id: `api-${artistName.toLowerCase().replace(/\s/g, '-')}`,
+          name: artistName,
           image: song.coverUrl,
           followers: Math.floor(Math.random() * 1000000).toLocaleString()
         });
       }
     });
-    return Array.from(artistMap.values());
-  };
+  });
+  return Array.from(artistMap.values());
+};
 
 
-  const extractAlbumsFromSongs = (apiSongs: Song[]) => {
-    const albumMap = new Map();
-    apiSongs.forEach(song => {
-      const key = `${song.album}-${song.artist}`;
-      if (!albumMap.has(key)) {
-        albumMap.set(key, {
-          id: `api-${key.toLowerCase().replace(/\s/g, '-')}`,
-          name: song.album,
-          artist: song.artist,
-          image: song.coverUrl,
-          year: "2024",
-          songs: 1
-        });
-      } else {
-        const existing = albumMap.get(key);
-        existing.songs += 1;
-        albumMap.set(key, existing);
-      }
-    });
-    return Array.from(albumMap.values());
-  };
+const extractAlbumsFromSongs = (apiSongs: Song[]) => {
+  const albumMap = new Map();
+  apiSongs.forEach(song => {
+
+    const artistName = song.artists ? song.artists.join(', ') : song.artist;
+    const key = `${song.album}-${artistName}`;
+    
+    if (!albumMap.has(key)) {
+      albumMap.set(key, {
+        id: `api-${key.toLowerCase().replace(/\s/g, '-')}`,
+        name: song.album,
+        artist: artistName,
+        image: song.coverUrl,
+        year: "2024",
+        songs: 1
+      });
+    } else {
+      const existing = albumMap.get(key);
+      existing.songs += 1;
+      albumMap.set(key, existing);
+    }
+  });
+  return Array.from(albumMap.values());
+};
 
   // ========== MAIN FUNCTIONS ==========
   const fetchSongs = async () => {
@@ -349,14 +350,17 @@ const handleVerifyOtpAndRedirect = async (e: React.FormEvent) => {
 
   // ========== DERIVED DATA ==========
   const trendingSongs = [...songs].sort((a, b) => b.plays - a.plays).slice(0, 10);
-  const searchResults = () => {
-    if (!searchQuery) return [];
-    return songs.filter(song => 
-      song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      song.album.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  };
+const searchResults = () => {
+  if (!searchQuery) return [];
+  return songs.filter(song => 
+    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (song.artists && song.artists.some(artist => 
+      artist.toLowerCase().includes(searchQuery.toLowerCase())
+    )) ||
+    song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    song.album.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+};
 
 // ========== USE EFFECTS ==========
 useEffect(() => {
@@ -442,6 +446,7 @@ useEffect(() => {
           }}
           isLoggedIn={isLoggedIn}
           username={user?.username}
+          isAdmin={user?.role === 'admin'}
         />
 
         {(error || authError) && (
@@ -543,15 +548,25 @@ useEffect(() => {
         )}
 
         {currentPage === "search" && (
-          <SearchPage
-            query={searchQuery}
-            results={searchResults()}
-            favorites={favorites}
-            onPlay={handlePlaySong}
-            onToggleFavorite={handleToggleFavorite}
-            onAddToQueue={addToQueue}
-          />
-        )}
+        <SearchPage
+          query={searchQuery}
+          songs={songs}
+          artists={artists}
+          albums={albums}
+          favorites={favorites}
+          onPlay={handlePlaySong}
+          onToggleFavorite={handleToggleFavorite}
+          onAddToQueue={addToQueue}
+          onSelectArtist={(artist) => {
+            setSelectedArtist(artist);
+            setCurrentPage("artist");
+          }}
+          onSelectAlbum={(album) => {
+            setSelectedAlbum(album);
+            setCurrentPage("album");
+          }}
+        />
+      )}
 
         {currentPage === "favorites" && (
           <FavoritesPage

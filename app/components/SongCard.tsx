@@ -23,7 +23,9 @@ export function SongCard({ song, isFavorite, onPlay, onToggleFavorite, onAddToQu
       <div className="song-info">
         <div>
           <h3 className="song-title">{song.title}</h3>
-          <p className="song-artist">{song.artist}</p>
+          <p className="song-artist">
+  {song.artists ? song.artists.join(', ') : song.artist}
+          </p>
           <p className="song-plays">❄️ {song.plays.toLocaleString()} plays</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>

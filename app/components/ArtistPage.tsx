@@ -13,7 +13,10 @@ interface ArtistPageProps {
 }
 
 export function ArtistPage({ artist, songs, favorites, onBack, onPlay, onToggleFavorite, onAddToQueue }: ArtistPageProps) {
-  const artistSongs = songs.filter(song => song.artist === artist.name);
+  const artistSongs = songs.filter(song => 
+  song.artist === artist.name || 
+  (song.artists && song.artists.includes(artist.name))
+);
 
   return (
     <div>
