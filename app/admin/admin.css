@@ -28,6 +28,29 @@
   -webkit-text-fill-color: transparent;
 }
 
+.admin-header-buttons{
+  display: flex;
+  gap: 12px;
+}
+
+.Home-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+.Home-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
 .logout-button {
   display: flex;
   align-items: center;

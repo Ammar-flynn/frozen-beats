@@ -24,12 +24,8 @@ import { ChangePasswordModal } from "./components/ChangePasswordModal";
 export default function Home() {
   // ========== STATE ==========
   const [songs, setSongs] = useState<Song[]>([]);
-  const [artists, setArtists] = useState<Artist[]>([
-    { id: "default-1", name: "Sabrina Carpenter", image: "https://images.genius.com/8e8e92eda3d816065a4272a56b6f5ef6.1000x1000x1.png", followers: "222.5M" },
-  ]);
-  const [albums, setAlbums] = useState<Album[]>([
-    { id: "default-1", name: "Short N' Sweet", artist: "Sabrina Carpenter", image: "https://i.scdn.co/image/ab67616d0000b273fd8d7a8d96871e791cb1f626", year: "2024", songs: 12 }
-  ]);
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
@@ -120,9 +116,9 @@ const hardcodedSongs: Song[] = [
     artist: "Sabrina Carpenter",
     artists: ["Sabrina Carpenter"],
     album: "Short N' Sweet",
-    coverUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3SuAvXxSHfSqDe0jS5hZexnC7-ovu3SudDw&s",
-    albumCoverUrl: "",
-    audioUrl: "https://res.cloudinary.com/dqxuz1q6i/video/upload/v1775568901/Sabrina_Carpenter_-_Espresso_sfhscb.mp3",
+    coverUrl: "https://res.cloudinary.com/dyqq9glj6/image/upload/v1777480998/Sabrina_Carpenter_v7sner.jpg",
+    albumCoverUrl: "https://res.cloudinary.com/dyqq9glj6/image/upload/v1777481242/Short_n_Sweet_ptykg9.png",
+    audioUrl: "https://res.cloudinary.com/dyqq9glj6/video/upload/v1777383693/Espresso_-_Sabrina_Carpenter_jeqj3m.mp3",
     plays: 125678
   },
 ];
@@ -155,28 +151,50 @@ const handleOpenQueue = () => setIsQueueOpen(true);
 
 
 const extractAlbumsFromSongs = (apiSongs: Song[]) => {
-  const albumMap = new Map();
+  const albumMap = new Map<string, {
+    id: string;
+    name: string;
+    artistSet: Set<string>;
+    image: string;
+    year: string;
+    songs: number;
+  }>();
+  
   apiSongs.forEach(song => {
-
-    const artistName = song.artists ? song.artists.join(', ') : song.artist;
-    const key = `${song.album}-${artistName}`;
+    const albumName = song.album;
+    const artistsList = song.artists || [song.artist];
     
-    if (!albumMap.has(key)) {
-      albumMap.set(key, {
-        id: `api-${key.toLowerCase().replace(/\s/g, '-')}`,
-        name: song.album,
-        artist: artistName,
-        image: song.coverUrl,
+    // Get image URL with fallback
+    const imageUrl = song.albumCoverUrl || song.coverUrl || "";
+    
+    if (!albumMap.has(albumName)) {
+      albumMap.set(albumName, {
+        id: `api-${albumName.toLowerCase().replace(/\s/g, '-')}`,
+        name: albumName,
+        artistSet: new Set(artistsList),
+        image: imageUrl,
         year: "2024",
         songs: 1
       });
     } else {
-      const existing = albumMap.get(key);
+      const existing = albumMap.get(albumName)!;
+      artistsList.forEach(artist => existing.artistSet.add(artist));
       existing.songs += 1;
-      albumMap.set(key, existing);
+      albumMap.set(albumName, existing);
     }
   });
-  return Array.from(albumMap.values());
+  
+  // Convert to final Album format
+  const result: Album[] = Array.from(albumMap.values()).map(album => ({
+    id: album.id,
+    name: album.name,
+    artist: album.artistSet.size > 1 ? "Various Artists" : Array.from(album.artistSet)[0],
+    image: album.image,
+    year: album.year,
+    songs: album.songs
+  }));
+  
+  return result;
 };
 
   // ========== MAIN FUNCTIONS ==========
@@ -507,10 +525,6 @@ useEffect(() => {
                 setCurrentPage("artist");
               }} 
             />
-            <AlbumGrid albums={albums} onSelectAlbum={(album) => {
-              setSelectedAlbum(album);
-              setCurrentPage("album");
-            }} />
             <div>
               <h2 className="section-title" style={{ marginBottom: '24px' }}>❄️ Popular Tracks</h2>
               <SongGrid
@@ -521,6 +535,11 @@ useEffect(() => {
                 onAddToQueue={addToQueue}
               />
             </div>
+              <AlbumGrid albums={albums.slice(0,16)} onSelectAlbum={(album) => {
+              setSelectedAlbum(album);
+              setCurrentPage("album");
+            }} 
+            />
           </>
         )}
 

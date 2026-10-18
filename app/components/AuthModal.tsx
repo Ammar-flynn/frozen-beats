@@ -111,8 +111,11 @@ export function AuthModal({
     });
   };
 
-  // Handle forgot password click
-  const handleForgotPasswordClick = () => {
+  // FIXED: Handle forgot password click - PREVENT PAGE REFRESH
+  const handleForgotPasswordClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // PREVENT DEFAULT BEHAVIOR
+    e.stopPropagation(); // STOP EVENT BUBBLING
+    
     transitionToForm("forgot", () => {
       setLocalShowForgot(true);
       onForgotPassword();
@@ -120,22 +123,31 @@ export function AuthModal({
   };
 
   // Handle back to login
-  const handleBackToLogin = () => {
+  const handleBackToLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // PREVENT DEFAULT BEHAVIOR
+    e.stopPropagation();
+    
     transitionToForm("login", () => {
       setLocalShowForgot(false);
       onBackToLogin();
     });
   };
 
-  // Handle send OTP
+  // Handle send OTP - FIXED to prevent refresh
   const handleSendResetOtp = (e: React.FormEvent) => {
+    e.preventDefault(); // PREVENT FORM SUBMISSION REFRESH
+    e.stopPropagation();
+    
     transitionToForm("reset", () => {
       onSendResetOtp(e);
     });
   };
 
-  // Handle reset password
+  // Handle reset password - FIXED to prevent refresh
   const handleResetPassword = (e: React.FormEvent) => {
+    e.preventDefault(); // PREVENT FORM SUBMISSION REFRESH
+    e.stopPropagation();
+    
     transitionToForm("login", () => {
       onResetPassword(e);
     });
@@ -178,6 +190,7 @@ export function AuthModal({
             className="guest-button" 
             style={{ marginTop: '12px' }}
             disabled={isLoading}
+            type="button"
           >
             Resend OTP
           </button>
@@ -185,6 +198,7 @@ export function AuthModal({
             onClick={() => handleModeChange("register")} 
             className="guest-button" 
             style={{ marginTop: '8px' }}
+            type="button"
           >
             Back to Registration
           </button>
@@ -227,6 +241,7 @@ export function AuthModal({
             onClick={handleBackToLogin} 
             className="guest-button" 
             style={{ marginTop: '12px' }}
+            type="button"
           >
             Back to Login
           </button>
@@ -259,6 +274,7 @@ export function AuthModal({
             onClick={handleBackToLogin} 
             className="guest-button" 
             style={{ marginTop: '12px' }}
+            type="button"
           >
             Back to Login
           </button>
@@ -304,8 +320,15 @@ export function AuthModal({
         {mode === "login" && (
           <p className="auth-switch" style={{ justifyContent: 'center', marginTop: '8px' }}>
             <button 
-              onClick={handleForgotPasswordClick} 
-              style={{ color: '#666', fontSize: '14px' }}
+              onClick={handleForgotPasswordClick}
+              type="button"  // CRITICAL: Prevents form submission
+              style={{ 
+                color: '#666', 
+                fontSize: '14px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }}
             >
               Forgot Password?
             </button>
@@ -314,11 +337,20 @@ export function AuthModal({
         
         <p className="auth-switch">
           {mode === "login" ? "Don't have an account? " : "Already have an account? "}
-          <button onClick={() => handleModeChange(mode === "login" ? "register" : "login")}>
+          <button 
+            onClick={() => handleModeChange(mode === "login" ? "register" : "login")}
+            type="button"
+          >
             {mode === "login" ? "Register" : "Login"}
           </button>
         </p>
-        <button onClick={onGuestContinue} className="guest-button">Continue as Guest</button>
+        <button 
+          onClick={onGuestContinue} 
+          className="guest-button"
+          type="button"
+        >
+          Continue as Guest
+        </button>
       </div>
     );
   };
@@ -328,6 +360,21 @@ export function AuthModal({
       <div className="auth-card frozen-card">
         {renderForm()}
       </div>
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .auth-form-container {
+          transition: opacity 0.3s ease;
+        }
+        .auth-form-container.enter {
+          opacity: 1;
+        }
+        .auth-form-container.exit {
+          opacity: 0;
+        }
+      `}</style>
     </div>
   );
 }

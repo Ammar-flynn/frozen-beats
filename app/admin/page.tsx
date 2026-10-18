@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Music, Image, X, CheckCircle, AlertCircle, LogOut, User } from "lucide-react";
+import { Upload, Music, Image, X, CheckCircle, AlertCircle, LogOut, User, HomeIcon } from "lucide-react";
 import "./admin.css";
 
 export default function AdminPage() {
@@ -159,6 +159,10 @@ export default function AdminPage() {
     }
   };
 
+  const handleHome = () => {
+     router.push('/');
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     router.push('/');
@@ -171,10 +175,16 @@ export default function AdminPage() {
     <div className="admin-container">
       <div className="admin-header">
         <h1>🎵 Admin Dashboard - Upload Songs</h1>
+        <div className ="admin-header-buttons">
+        <button onClick={handleHome} className="Home-button">
+          <HomeIcon size={20} />
+          Home
+        </button>
         <button onClick={handleLogout} className="logout-button">
           <LogOut size={20} />
           Logout
         </button>
+        </div>
       </div>
 
       <div className="admin-content">

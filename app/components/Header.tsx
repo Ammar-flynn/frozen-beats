@@ -49,7 +49,7 @@ export function Header({
       <div className="user-section">
         {/* Upload button for admin - navigates to /admin */}
         {isAdmin && (
-          <button onClick={handleUploadClick} className="upload-button" title="Admin Panel">
+          <button onClick={handleUploadClick} className="Home-upload-button" title="Admin Panel">
             <Upload size={18} />
             <span>Upload</span>
           </button>

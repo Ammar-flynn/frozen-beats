@@ -36,6 +36,10 @@ export function AlbumPage({ album, songs, favorites, onBack, onPlay, onToggleFav
               <span className="track-number">#{index + 1}</span>
               <div>
                 <h3 className="track-title">{song.title}</h3>
+                {/* ADD ARTIST NAME HERE */}
+                <p className="track-artist" style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                  {song.artists ? song.artists.join(', ') : song.artist}
+                </p>
               </div>
             </div>
             <div className="track-actions">

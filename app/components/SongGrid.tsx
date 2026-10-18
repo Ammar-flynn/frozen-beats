@@ -11,7 +11,7 @@ interface SongGridProps {
 
 export function SongGrid({ songs, favorites, onPlay, onToggleFavorite, onAddToQueue }: SongGridProps) {
   return (
-    <div className="songs-grid">
+    <div style={{ marginBottom: '48px' }}className="songs-grid">
       {songs.map((song) => (
         <SongCard
           key={song._id}

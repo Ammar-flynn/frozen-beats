@@ -234,7 +234,7 @@ body {
   text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
 }
 
-.upload-button {
+.Home-upload-button {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -249,12 +249,12 @@ body {
   transition: all 0.3s ease;
 }
 
-.upload-button:hover {
+.Home-upload-button:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(10, 116, 218, 0.4);
 }
 
-.upload-button span {
+.Home-upload-button span {
   margin-left: 4px;
 }
 
@@ -2263,6 +2263,27 @@ button:disabled {
   cursor: pointer;
 }
 
+/* ========== CUSTOM SCROLLBAR========== */
+/* Icy scrollbar theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(135deg, rgba(10, 116, 218, 0.1), rgba(135, 206, 235, 0.05));
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #0A74DA, #4A90E2, #87CEEB);
+  border-radius: 10px;
+  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #87CEEB, #4A90E2, #0A74DA);
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   /* Main content padding */
@@ -3291,11 +3312,11 @@ button:disabled {
 
 /* Upload Button*/
 @media (max-width: 480px) {
-  .upload-button span {
+  .Home-upload-button span {
     display: none;
   }
   
-  .upload-button {
+  .Home-upload-button {
     padding: 8px;
   }
 }

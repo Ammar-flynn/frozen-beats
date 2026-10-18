@@ -39,11 +39,27 @@ export async function POST(req) {
         // Split artists by comma and trim whitespace
         const artistsList = artistString.split(',').map(a => a.trim());
 
-        const uploadToCloudinary = async (file, folder) => {
+        // UPDATED: Accept custom name parameter
+        const uploadToCloudinary = async (file, folder, customName = null) => {
             const buffer = Buffer.from(await file.arrayBuffer());
+            
+            let cleanName;
+            if (customName) {
+                // Use custom name from form input
+                cleanName = customName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+            } else {
+                // Fallback to original filename
+                const originalName = file.name.split('.').slice(0, -1).join('.');
+                cleanName = originalName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+            }
+            
             return new Promise((resolve, reject) => {
                 cloudinary.uploader.upload_stream(
-                    { folder, resource_type: "auto" },
+                    { 
+                        folder, 
+                        resource_type: "auto",
+                        public_id: cleanName  
+                    },
                     (error, result) => {
                         if (error) reject(error);
                         else resolve(result);
@@ -68,7 +84,8 @@ export async function POST(req) {
             }
         };
 
-        const audioUpload = await uploadToCloudinary(audioFile, "songs");
+        // UPDATED: Pass title for audio
+        const audioUpload = await uploadToCloudinary(audioFile, "songs", title);
         
         await client.connect();
         const db = client.db("FrozenBeats");
@@ -86,8 +103,8 @@ export async function POST(req) {
             albumCoverUrl = existingAlbumSong.albumCoverUrl;
             console.log(`📀 Using existing album cover for "${album}"`);
         } else {
-            // New album - upload the cover image
-            const coverUpload = await uploadToCloudinary(coverFile, "covers");
+            // UPDATED: Pass album name for cover
+            const coverUpload = await uploadToCloudinary(coverFile, "covers", album);
             albumCoverUrl = coverUpload.secure_url;
             isNewAlbum = true;
             console.log(`🆕 New album cover uploaded for "${album}"`);
@@ -103,7 +120,8 @@ export async function POST(req) {
             let artistCoverUrl = null;
             
             if (artistCoverFile && artistCoverFile.size > 0) {
-                const artistCoverUpload = await uploadToCloudinary(artistCoverFile, "artists");
+                // UPDATED: Pass artist name for artist cover
+                const artistCoverUpload = await uploadToCloudinary(artistCoverFile, "artists", artistName);
                 artistCoverUrl = artistCoverUpload.secure_url;
             }
             

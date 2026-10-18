@@ -83,7 +83,7 @@ export function Sidebar({
               
               <div className="desktop-app-modal-buttons">
                 <a 
-                  href="https://frozenbeats.vercel.app/download/Frozen Beats Setup.exe" 
+                  href="https://github.com/Ammar-flynn/frozen-beats/releases/download/version-1.0.0/FrozenBeats-Setup.exe" 
                   className="desktop-app-download-btn"
                   download
                 >
